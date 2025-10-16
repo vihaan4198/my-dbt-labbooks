@@ -1,0 +1,440 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Model Contracts: Hands-On Lab</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+        /* --- CSS Variables --- */
+        :root {
+            --bg-color: #f4f4f9;
+            --main-text: #2c3e50;
+            --primary-purple: #8e44ad;
+            --primary-blue: #3498db;
+            --error-red: #c0392b;
+            --panel-bg: #ffffff;
+            --header-border: #9b59b6;
+            --code-bg-light: #f4f2f8;
+            --code-text-dark: #3b3b3b;
+            --success-color: #27ae60;
+        }
+
+        /* --- General Layout & Typography --- */
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            line-height: 1.6;
+            color: var(--main-text);
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main.container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--panel-bg);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            flex-grow: 1;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 700;
+            color: var(--primary-purple);
+        }
+        h1 { font-size: 2.5em; text-align: center; border-bottom: 3px solid var(--header-border); padding-bottom: 10px; }
+        h2 { font-size: 2em; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-top: 40px; }
+        h3 { font-size: 1.5em; }
+        p, li { font-size: 1.1em; }
+        ul { padding-left: 20px; }
+        pre {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--code-bg-light);
+            color: var(--code-text-dark);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        code {
+            background-color: #e8e6ed;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        /* --- Header & Footer --- */
+        .page-header, .page-footer {
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .page-header h1 { margin: 0; font-size: 1.8em; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .page-footer { font-size: 1em; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .page-footer a { color: white; text-decoration: none; font-weight: 600; }
+        .page-footer a:hover { text-decoration: underline; }
+        .footer-item { display: flex; align-items: center; gap: 8px; }
+
+        /* --- Tab Navigation --- */
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-link { padding: 10px 15px; cursor: pointer; border: none; background: none; font-size: 1.1em; font-weight: 600; color: #95a5a6; transition: color 0.3s ease; }
+        .tab-link:hover { color: var(--primary-purple); }
+        .tab-link.active { color: var(--primary-purple); border-bottom: 3px solid var(--primary-purple); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* --- Content Sections (Blog/Tutorial Style) --- */
+        .content-section {
+            background: #fdfcfe;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0d4e4;
+        }
+        .step {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #ccc;
+        }
+        .step:last-child { border-bottom: none; margin-bottom: 0; }
+        .step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute; left: 0; top: -5px; width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2em; font-weight: bold;
+        }
+        .content-section { counter-reset: step-counter; }
+        .step h3 { font-size: 1.6em; color: var(--primary-purple); margin-top: 0; border: none; }
+        .step p, .step ul, .step ol { font-size: 1.1em; color: #555; }
+        
+        .info-box {
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+            border: 1px solid;
+        }
+        .info-box.success { background-color: #eafaf1; border-color: var(--success-color); border-left: 5px solid var(--success-color); }
+        .info-box.failure { background-color: #fbeae9; border-color: var(--error-red); border-left: 5px solid var(--error-red); }
+        .info-box strong { display: block; margin-bottom: 5px; font-size: 1.1em; }
+
+
+        /* --- Quiz Components --- */
+        .quiz-section { background: #fdfcfe; padding: 20px; border-radius: 8px; border: 1px solid #e0d4e4; }
+        .question { margin-bottom: 20px; }
+        .options label { display: block; margin: 5px 0; cursor: pointer; padding: 10px; border-radius: 5px; }
+        .options label:hover { background-color: #e5e0f9; }
+        .feedback { font-weight: bold; margin-left: 10px; }
+        .correct { color: var(--success-color); }
+        .incorrect { color: var(--error-red); }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <h1> Learn with Vikash: dbt Model Contracts Lab</h1>
+</header>
+
+<main class="container">
+    <h1>Lab Guide: Hands-On with dbt Contracts</h1>
+
+    <div class="tabs">
+        <button class="tab-link active" data-tab="setup">Setup & Prerequisites</button>
+        <button class="tab-link" data-tab="activities">Lab Activities</button>
+        <button class="tab-link" data-tab="quiz">Knowledge Check</button>
+    </div>
+    
+    <div id="setup" class="tab-content active"></div>
+    <div id="activities" class="tab-content"></div>
+    <div id="quiz" class="tab-content"></div>
+
+</main>
+
+<footer class="page-footer">
+    <div class="footer-item"><strong>Vedadots</strong> - Expert in training services on tech stacks for Data, Cloud & AI</div>
+    <div class="footer-item">📧 <a href="mailto:info@vedadots.com">Contact - info@vedadots.com</a></div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // --- 1. DOM ELEMENT REFERENCES ---
+    const DOM = {
+        tabs: document.querySelectorAll('.tab-link'),
+        tabContents: document.querySelectorAll('.tab-content'),
+    };
+
+    // Helper function to escape HTML characters for code blocks
+    function escapeHtml(text) {
+        if (!text) return '';
+        return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+    }
+
+    // --- 2. CONTENT ---
+    const CONTENT = {
+        setup: `
+            <h2>Objective & Prerequisites</h2>
+            <p><strong>Objective:</strong> To demonstrate how to define, enforce, and observe violations of data contracts in dbt models.</p>
+            <div class="content-section">
+                <h3>Prerequisites</h3>
+                <ul>
+                    <li><strong>dbt Core Installed:</strong> Ensure you have a working dbt Core installation.</li>
+                    <li><strong>dbt Project:</strong> You need an initialized dbt project connected to your data warehouse.</li>
+                    <li><strong>Basic Database Access:</strong> Your dbt user must have permissions to create tables and seeds.</li>
+                </ul>
+            </div>
+
+            <h2>Step 0: Create Source Data</h2>
+            <p>We'll start with a small CSV file to act as our raw data. Create this file in your project.</p>
+            <div class="content-section">
+                <h3>File: <code>data/raw_customers.csv</code></h3>
+                <pre><code>customer_id,customer_name,email,birth_date,membership_status
+1,Alice Smith,alice@example.com,1990-01-15,Active
+2,Bob Johnson,bob@example.com,1985-05-20,Inactive
+3,Charlie Brown,charlie@example.com,1992-11-01,Active
+4,Diana Prince,diana@example.com,1978-07-22,Active</code></pre>
+                
+                <h3>Command</h3>
+                <p>Load this seed data into your data warehouse.</p>
+                <pre><code>dbt seed</code></pre>
+                <div class="info-box success">
+                    <strong>Observation:</strong> This command will create a table named <code>raw_customers</code> in your database.
+                </div>
+            </div>
+        `,
+        activities: `
+            <h2>Lab Activities: Building and Breaking Contracts</h2>
+            <p>Follow these activities to see contracts in action.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Activity 1: Create a Basic Model (No Contract)</h3>
+                    <p>First, create a simple dbt model without a contract to establish a baseline.</p>
+                    <h4>File: <code>models/marts/dim_customers.sql</code></h4>
+                    <pre><code>-- models/marts/dim_customers.sql
+SELECT
+    customer_id,
+    customer_name,
+    email,
+    birth_date,
+    membership_status
+FROM
+    {{ ref('raw_customers') }}
+WHERE
+    customer_id IS NOT NULL</code></pre>
+                    <h4>Command</h4>
+                    <pre><code>dbt run --select dim_customers</code></pre>
+                    <div class="info-box success">
+                        <strong>Observation:</strong> The model runs successfully and creates the <code>dim_customers</code> table.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Activity 2: Define and Enforce a Contract</h3>
+                    <p>Now, let's add a contract to our model in a YAML file.</p>
+                    <h4>File: <code>models/marts/schema.yml</code></h4>
+                    <pre><code>${escapeHtml(`version: 2
+
+models:
+  - name: dim_customers
+    description: "A dimension table for customer information."
+    config:
+      contract:
+        enforced: true
+    columns:
+      - name: customer_id
+        data_type: integer
+        tests: [unique, not_null]
+      - name: customer_name
+        data_type: string
+      - name: email
+        data_type: string
+        tests: [unique]
+      - name: birth_date
+        data_type: date
+      - name: membership_status
+        data_type: string
+        tests:
+          - accepted_values:
+              values: ['Active', 'Inactive', 'Pending']`)}</code></pre>
+                    <h4>Command</h4>
+                    <pre><code>dbt run --select dim_customers</code></pre>
+                    <div class="info-box success">
+                        <strong>Observation:</strong> The model still runs successfully. dbt has now validated its output against the contract.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Activity 3: Break the Contract (Column Name)</h3>
+                    <p>Let's simulate a breaking change by altering a column name in the SQL.</p>
+                    <h4>File: <code>models/marts/dim_customers.sql</code> (Modify)</h4>
+                    <pre><code>SELECT
+    customer_id,
+    customer_name AS full_name, -- Renamed column
+    email,
+    birth_date,
+    membership_status
+FROM
+    {{ ref('raw_customers') }}</code></pre>
+                    <h4>Command</h4>
+                    <pre><code>dbt run --select dim_customers</code></pre>
+                    <div class="info-box failure">
+                        <strong>Expected Failure!</strong> dbt will throw an error similar to:
+                        <pre><code>Compilation Error
+Your model \`dim_customers\` is missing the column 'customer_name'</code></pre>
+                        <strong>Explanation:</strong> The contract expects <code>customer_name</code>, but the SQL query produced <code>full_name</code>. dbt stopped the build, preventing a breaking change. Revert the SQL file before proceeding.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Activity 4: Break the Contract (Data Type)</h3>
+                    <p>Now, let's change a data type in the SQL to conflict with the contract.</p>
+                    <h4>File: <code>models/marts/dim_customers.sql</code> (Modify)</h4>
+                    <pre><code>SELECT
+    CAST(customer_id AS {{ dbt.type_string() }}) AS customer_id, -- Changed to string
+    customer_name,
+    email,
+    birth_date,
+    membership_status
+FROM
+    {{ ref('raw_customers') }}</code></pre>
+                    <h4>Command</h4>
+                    <pre><code>dbt run --select dim_customers</code></pre>
+                    <div class="info-box failure">
+                        <strong>Expected Failure!</strong> dbt will throw an error similar to:
+                        <pre><code>Compilation Error
+Column 'customer_id': Expected type 'INTEGER', but got 'STRING'</code></pre>
+                        <strong>Explanation:</strong> The contract specifies <code>customer_id</code> as an integer, but the SQL produced a string. dbt caught the type mismatch. Revert the SQL file before proceeding.
+                    </div>
+                </div>
+
+                <div class="step">
+                    <h3>Activity 5: Break the Contract (Constraint)</h3>
+                    <p>Let's pass data that violates a <code>not_null</code> constraint.</p>
+                    <h4>File: <code>data/raw_customers_bad_data.csv</code> (Create New)</h4>
+                    <pre><code>customer_id,customer_name,email
+,Frank,frank@example.com</code></pre>
+                    <h4>File: <code>models/marts/dim_customers.sql</code> (Modify)</h4>
+                    <pre><code>SELECT customer_id, customer_name, email FROM {{ ref('raw_customers_bad_data') }}</code></pre>
+                    <h4>Commands</h4>
+                    <pre><code>dbt seed --select raw_customers_bad_data
+dbt run --select dim_customers</code></pre>
+                    <div class="info-box failure">
+                        <strong>Expected Failure!</strong> The error will come from your database, indicating a null value violation.
+                        <pre><code>Database Error
+Error: Column 'customer_id' cannot be null.</code></pre>
+                        <strong>Explanation:</strong> The contract specified <code>not_null</code> on <code>customer_id</code>. When dbt tried to insert the data, the database rejected the row with the null ID. Revert the SQL file before proceeding.
+                    </div>
+                </div>
+
+                 <div class="step">
+                    <h3>Activity 6: Deprecate a Model</h3>
+                    <p>Marking a model as deprecated warns consumers that its contract is changing or moving.</p>
+                    <h4>File: <code>models/marts/schema.yml</code> (Modify)</h4>
+                    <pre><code>${escapeHtml(`# In the dim_customers model config:
+config:
+  contract:
+    enforced: true
+  deprecated: true # <<< Add this line`)}</code></pre>
+                    <h4>Command</h4>
+                    <pre><code>dbt run --select dim_customers</code></pre>
+                    <div class="info-box success">
+                        <strong>Observation:</strong> The model runs successfully, but dbt prints a warning in the console.
+                        <pre><code>DeprecationWarning: Model 'dim_customers' is deprecated.</code></pre>
+                        <strong>Explanation:</strong> This provides a clear warning to guide users to newer versions without breaking the build.
+                    </div>
+                </div>
+            </div>
+        `,
+        quiz: `
+            <h2>Knowledge Check Quiz 📝</h2>
+            <div class="quiz-section" id="quiz-container"></div>
+        `,
+    };
+
+    const QUIZ_QUESTIONS = [
+        { q: '1. What is the primary purpose of setting <code>enforced: true</code> in a model\'s contract config?', a: 'c', o: { a: 'To add documentation to the model.', b: 'To make the dbt run faster.', c: 'To validate the model\'s output schema and data types during execution.' } },
+        { q: '2. If you rename a column in your model\'s SQL but forget to update the contract in your <code>schema.yml</code>, what will happen?', a: 'a', o: { a: 'The <code>dbt run</code> will fail with a Compilation Error.', b: 'The <code>dbt run</code> will succeed but create a table with the wrong column name.', c: 'dbt will automatically update the contract.' } },
+        { q: '3. You are trying to insert a row where the <code>customer_id</code> is NULL. The contract has a <code>not_null</code> test on this column. What kind of error should you expect?', a: 'b', o: { a: 'A Jinja parsing error.', b: 'A Database Error during materialization.', c: 'A circular dependency error.' } },
+        { q: '4. What does the <code>deprecated: true</code> configuration do?', a: 'd', o: { a: 'It causes the dbt run to fail.', b: 'It archives the model so it can no longer be run.', c: 'It automatically creates a v2 of the model.', d: 'It issues a warning during the dbt run but allows the model to build.' } },
+        { q: '5. What is the correct dbt command to load CSV files from your <code>data/</code> directory into your database?', a: 'c', o: { a: 'dbt run', b: 'dbt test', c: 'dbt seed', d: 'dbt compile' } }
+    ];
+
+    // --- 3. INITIALIZATION & RENDERING ---
+    function init() {
+        // Populate tabs
+        for (const [key, value] of Object.entries(CONTENT)) {
+            const tabContent = document.getElementById(key);
+            if (tabContent) {
+                tabContent.innerHTML = value;
+            }
+        }
+        
+        // Populate Quiz
+        const quizContainer = document.getElementById('quiz-container');
+        let quizHtml = '';
+        QUIZ_QUESTIONS.forEach((q, i) => {
+            quizHtml += `
+            <div class="question" id="q${i+1}">
+                <p><strong>${i + 1}. ${q.q}</strong></p>
+                <div class="options">
+                    ${Object.keys(q.o).map(key => `<label><input type="radio" name="q${i+1}" value="${key}"> ${key}) ${q.o[key]}</label>`).join('')}
+                </div>
+            </div>`;
+        });
+        quizContainer.innerHTML = quizHtml + `<button id="btnCheckQuiz">Check Answers</button><p id="quizResult" style="font-size: 1.2em; font-weight: bold; margin-top: 15px;"></p>`;
+        
+        // Attach event listeners
+        DOM.tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+        document.getElementById('btnCheckQuiz').addEventListener('click', handleQuizCheck);
+    }
+
+    // --- 4. EVENT HANDLERS ---
+    function handleTabClick(event) {
+        const tabName = event.currentTarget.dataset.tab;
+        DOM.tabs.forEach(tab => tab.classList.remove('active'));
+        DOM.tabContents.forEach(content => content.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+    }
+
+    function handleQuizCheck() {
+        let score = 0;
+        QUIZ_QUESTIONS.forEach((q, i) => {
+            const questionEl = document.getElementById(`q${i+1}`);
+            questionEl.querySelectorAll('.feedback').forEach(el => el.remove());
+            const selected = document.querySelector(`input[name="q${i+1}"]:checked`);
+            if (selected) {
+                const feedbackEl = document.createElement('span');
+                feedbackEl.className = 'feedback';
+                if (selected.value === q.a) {
+                    feedbackEl.textContent = '✅ Correct!';
+                    feedbackEl.classList.add('correct');
+                    score++;
+                } else {
+                    feedbackEl.textContent = `❌ Incorrect. The answer is (${q.a}).`;
+                    feedbackEl.classList.add('incorrect');
+                }
+                selected.parentElement.appendChild(feedbackEl);
+            }
+        });
+        document.getElementById('quizResult').textContent = `You scored ${score} out of ${QUIZ_QUESTIONS.length}.`;
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
