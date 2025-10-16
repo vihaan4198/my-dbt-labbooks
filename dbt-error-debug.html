@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Error Handling: Interactive Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+        /* --- CSS Variables --- */
+        :root {
+            --bg-color: #f4f4f9;
+            --main-text: #2c3e50;
+            --primary-purple: #8e44ad;
+            --primary-blue: #3498db;
+            --error-red: #c0392b;
+            --panel-bg: #ffffff;
+            --header-border: #9b59b6;
+            --code-bg-light: #f4f2f8;
+            --code-text-dark: #3b3b3b;
+            --success-color: #27ae60;
+        }
+
+        /* --- General Layout & Typography --- */
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            line-height: 1.6;
+            color: var(--main-text);
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main.container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--panel-bg);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            flex-grow: 1;
+        }
+        h1, h2, h3, h4 {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 700;
+            color: var(--primary-purple);
+        }
+        h1 { font-size: 2.5em; text-align: center; border-bottom: 3px solid var(--header-border); padding-bottom: 10px; }
+        h2 { font-size: 2em; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-top: 40px; }
+        h3 { font-size: 1.5em; }
+        p, li { font-size: 1.1em; }
+        ul { padding-left: 20px; }
+        pre {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--code-bg-light);
+            color: var(--code-text-dark);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        code {
+            background-color: #e8e6ed;
+            padding: 2px 5px;
+            border-radius: 4px;
+            font-family: 'Roboto Mono', monospace;
+            font-size: 0.9em;
+        }
+
+        /* --- Header & Footer --- */
+        .page-header, .page-footer {
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .page-header h1 { margin: 0; font-size: 1.8em; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .page-footer { font-size: 1em; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .page-footer a { color: white; text-decoration: none; font-weight: 600; }
+        .page-footer a:hover { text-decoration: underline; }
+        .footer-item { display: flex; align-items: center; gap: 8px; }
+
+        /* --- Tab Navigation --- */
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-link { padding: 10px 15px; cursor: pointer; border: none; background: none; font-size: 1.1em; font-weight: 600; color: #95a5a6; transition: color 0.3s ease; }
+        .tab-link:hover { color: var(--primary-purple); }
+        .tab-link.active { color: var(--primary-purple); border-bottom: 3px solid var(--primary-purple); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* --- Content Sections (Blog/Tutorial Style) --- */
+        .content-section {
+            background: #fdfcfe;
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #e0d4e4;
+        }
+        .step {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #ccc;
+        }
+        .step:last-child { border-bottom: none; margin-bottom: 0; }
+        .step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute; left: 0; top: -5px; width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2em; font-weight: bold;
+        }
+        .content-section { counter-reset: step-counter; }
+        .step h3 { font-size: 1.6em; color: var(--primary-purple); margin-top: 0; border: none; }
+        .step p, .step ul { font-size: 1.1em; color: #555; }
+        
+        /* --- Error Demo Components --- */
+        .error-demo {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .error-demo-panel {
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .error-demo-panel h4 {
+            margin: 0;
+            padding: 10px 15px;
+            background-color: #f9f9f9;
+        }
+        .error-demo-panel pre {
+            border-radius: 0 0 8px 8px;
+            margin: 0;
+            border: none;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+        .console-error {
+            color: #ffb8b8;
+            background-color: #4d1818;
+        }
+
+        /* --- Quiz Components --- */
+        .quiz-section { background: #fdfcfe; padding: 20px; border-radius: 8px; border: 1px solid #e0d4e4; }
+        .question { margin-bottom: 20px; }
+        .options label { display: block; margin: 5px 0; cursor: pointer; padding: 10px; border-radius: 5px; }
+        .options label:hover { background-color: #e5e0f9; }
+        .feedback { font-weight: bold; margin-left: 10px; }
+        .correct { color: var(--success-color); }
+        .incorrect { color: var(--error-red); }
+
+        @media (max-width: 800px) {
+            .error-demo { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <h1> Learn with Vikash: dbt Error Handling</h1>
+</header>
+
+<main class="container">
+    <h1>Mastering dbt Debugging</h1>
+
+    <div class="tabs">
+        <button class="tab-link active" data-tab="debugging">Debugging Process</button>
+        <button class="tab-link" data-tab="runtime">Runtime Errors</button>
+        <button class="tab-link" data-tab="compilation">Compilation Errors</button>
+        <button class="tab-link" data-tab="dependency">Dependency Errors</button>
+        <button class="tab-link" data-tab="database">Database Errors</button>
+        <button class="tab-link" data-tab="practices">Best Practices</button>
+        <button class="tab-link" data-tab="quiz">Quiz</button>
+    </div>
+    
+    <div id="debugging" class="tab-content active"></div>
+    <div id="runtime" class="tab-content"></div>
+    <div id="compilation" class="tab-content"></div>
+    <div id="dependency" class="tab-content"></div>
+    <div id="database" class="tab-content"></div>
+    <div id="practices" class="tab-content"></div>
+    <div id="quiz" class="tab-content"></div>
+
+</main>
+
+<footer class="page-footer">
+    <div class="footer-item"><strong>Vedadots</strong> - Expert in training services on tech stacks for Data, Cloud & AI</div>
+    <div class="footer-item">📧 <a href="mailto:info@vedadots.com">Contact - info@vedadots.com</a></div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // --- 1. DOM ELEMENT REFERENCES ---
+    const DOM = {
+        tabs: document.querySelectorAll('.tab-link'),
+        tabContents: document.querySelectorAll('.tab-content'),
+    };
+
+    // --- 2. CONTENT ---
+    const CONTENT = {
+        debugging: `
+            <h2>The 4-Step Debugging Process</h2>
+            <p>Encountering an error in dbt can be intimidating, but following a structured process makes it manageable. Here’s a reliable workflow to diagnose and fix any dbt issue.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Read the Error Message </h3>
+                    <p>This is the most critical step. Don't just skim it! The dbt CLI provides detailed, human-readable error messages. Look for:</p>
+                    <ul>
+                        <li><strong>The primary error type:</strong> Is it a <code>Compilation Error</code>, <code>Database Error</code>, or something else?</li>
+                        <li><strong>The model name:</strong> dbt will almost always tell you which <code>.sql</code> or <code>.yml</code> file is causing the problem.</li>
+                        <li><strong>The specific reason:</strong> Look for keywords like "does not exist," "ambiguous column name," or "invalid syntax."</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h3>Inspect the File </h3>
+                    <p>Open the file identified in the error message. Use the context from the error to guide your inspection. For a SQL error, check the exact line number mentioned. For a dependency error, look at your <code>ref()</code> functions.</p>
+                </div>
+                <div class="step">
+                    <h3>Isolate the Problem </h3>
+                    <p>If the issue isn't immediately obvious, try to isolate the failing part. You can do this by:</p>
+                    <ul>
+                        <li><strong>Commenting out code:</strong> In a large SQL model, comment out CTEs one by one to see which one causes the failure.</li>
+                        <li><strong>Running a smaller command:</strong> Instead of <code>dbt build</code>, try <code>dbt compile --select your_model</code> to check just the Jinja and SQL syntax without hitting the database.</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h3>Validate the Artifacts </h3>
+                    <p>dbt creates helpful files in the <code>target/</code> directory. These are your ground truth.</p>
+                    <ul>
+                        <li><strong>Compiled SQL:</strong> Open <code>target/compiled/path/to/your_model.sql</code>. This shows you the exact SQL that dbt sent to your database after compiling the Jinja. Often, the error is obvious here.</li>
+                        <li><strong>Run Results:</strong> Check <code>target/run_results.json</code>. This file contains detailed metadata about every model in your last run, including error messages.</li>
+                    </ul>
+                </div>
+            </div>
+        `,
+        runtime: `
+            <h2>Runtime Errors</h2>
+            <p>These errors occur before dbt even tries to parse your project. They usually relate to your environment, project setup, or command-line invocation.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Example: Not a dbt Project</h3>
+                    <p>This is a classic error when you run a dbt command from the wrong directory.</p>
+                    <div class="error-demo">
+                        <div class="error-demo-panel">
+                            <h4>Command Executed</h4>
+                            <pre><code>$ dbt run</code></pre>
+                        </div>
+                        <div class="error-demo-panel">
+                            <h4>Simulated Console Error</h4>
+                            <pre class="console-error"><code>Encountered an error:
+Runtime Error
+  Could not find profile 'my_project'
+  ...
+Fatal: Not a dbt project. Missing dbt_project.yml.
+Or, are you in the right directory?</code></pre>
+                        </div>
+                    </div>
+                    <h4>How to Debug and Fix</h4>
+                    <ol>
+                        <li><strong>Read the Error:</strong> The message clearly says "Not a dbt project" and "Missing dbt_project.yml."</li>
+                        <li><strong>Inspect the Location:</strong> Use the <code>pwd</code> (or <code>cd</code> on Windows) command in your terminal to check your current directory.</li>
+                        <li><strong>Isolate & Fix:</strong> You'll likely find you're in your home directory or a parent folder. Use <code>cd path/to/your/dbt_project</code> to navigate to the correct folder where your <code>dbt_project.yml</code> file is located.</li>
+                    </ol>
+                </div>
+            </div>
+        `,
+        compilation: `
+            <h2>Compilation Errors</h2>
+            <p>These are the most common errors. They happen when dbt fails to turn your Jinja-infused SQL into pure, executable SQL. This can be due to bad Jinja syntax or invalid SQL.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Example: Missing Comma in SQL</h3>
+                    <p>A simple typo in your SQL can cause a compilation error. dbt often passes the underlying database error directly to you.</p>
+                    <div class="error-demo">
+                        <div class="error-demo-panel">
+                            <h4>Problematic Code (models/orders.sql)</h4>
+                            <pre><code>SELECT
+    order_id
+    customer_id -- Missing comma!
+FROM {{ source('jaffle_shop', 'orders') }}</code></pre>
+                        </div>
+                        <div class="error-demo-panel">
+                            <h4>Simulated Console Error</h4>
+                            <pre class="console-error"><code>Compilation Error in model orders (models/orders.sql)
+  Database Error:
+  syntax error line 3 at or near "customer_id"</code></pre>
+                        </div>
+                    </div>
+                    <h4>How to Debug and Fix</h4>
+                    <ol>
+                        <li><strong>Read the Error:</strong> dbt tells you the error is in <code>models/orders.sql</code> and the database reported a "syntax error" near <code>customer_id</code> on line 3.</li>
+                        <li><strong>Inspect the File:</strong> Go to line 3 of <code>models/orders.sql</code>. You'll see <code>customer_id</code> right after <code>order_id</code>.</li>
+                        <li><strong>Isolate & Fix:</strong> The missing comma is the clear issue. Add the comma after <code>order_id</code> to fix the SQL syntax.</li>
+                        <li><strong>Validate:</strong> Run <code>dbt compile --select orders</code>. It should now succeed.</li>
+                    </ol>
+                </div>
+            </div>
+        `,
+        dependency: `
+            <h2>Dependency Errors (Graph Validation)</h2>
+            <p>These errors occur when dbt cannot build its Directed Acyclic Graph (DAG). This is almost always caused by circular dependencies or references to non-existent models.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Example: Circular Dependency</h3>
+                    <p>This happens when Model A depends on Model B, and Model B depends on Model A. dbt cannot determine the run order.</p>
+                    <div class="error-demo">
+                        <div class="error-demo-panel">
+                            <h4>Problematic Code</h4>
+                            <pre><code>-- models/model_a.sql
+SELECT * FROM {{ ref('model_b') }}
+
+-- models/model_b.sql
+SELECT * FROM {{ ref('model_a') }}</code></pre>
+                        </div>
+                        <div class="error-demo-panel">
+                            <h4>Simulated Console Error</h4>
+                            <pre class="console-error"><code>dbt found a cycle in the model graph:
+- model_a -> model_b -> model_a</code></pre>
+                        </div>
+                    </div>
+                    <h4>How to Debug and Fix</h4>
+                    <ol>
+                        <li><strong>Read the Error:</strong> The message is very explicit: "dbt found a cycle" and it shows the exact path of the cycle.</li>
+                        <li><strong>Inspect the Files:</strong> Open both <code>model_a.sql</code> and <code>model_b.sql</code>.</li>
+                        <li><strong>Isolate & Fix:</strong> You must break the cycle. Decide which dependency is incorrect. For example, perhaps <code>model_b</code> should be referencing a staging model instead of <code>model_a</code>. Fix the <code>ref()</code> function in one of the files to point to the correct parent model.</li>
+                    </ol>
+                </div>
+            </div>
+        `,
+        database: `
+            <h2>Database Errors</h2>
+            <p>These errors occur after your SQL has been successfully compiled and sent to the database. The database then rejects the SQL for some reason, usually because of incorrect permissions or references to objects that don't exist.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Example: Relation Does Not Exist</h3>
+                    <p>This is common when a source table name changes, or you have a typo in your <code>source()</code> or <code>ref()</code> function.</p>
+                    <div class="error-demo">
+                        <div class="error-demo-panel">
+                            <h4>Problematic Code (models/customers.sql)</h4>
+                            <pre><code>SELECT *
+FROM {{ source('jaffle_shop', 'customerss') }} -- Typo!</code></pre>
+                        </div>
+                        <div class="error-demo-panel">
+                            <h4>Simulated Console Error</h4>
+                            <pre class="console-error"><code>Database Error in model customers (models/customers.sql)
+  Relation "raw.jaffle_shop.customerss" does not exist</code></pre>
+                        </div>
+                    </div>
+                    <h4>How to Debug and Fix</h4>
+                    <ol>
+                        <li><strong>Read the Error:</strong> The database reports that the relation <code>raw.jaffle_shop.customerss</code> does not exist. The extra 's' is a big clue.</li>
+                        <li><strong>Inspect the File:</strong> Look at your <code>ref()</code> or <code>source()</code> function in <code>models/customers.sql</code>. You'll see the typo.</li>
+                        <li><strong>Isolate & Fix:</strong> Correct the typo from <code>customerss</code> to <code>customers</code>.</li>
+                        <li><strong>Validate with Artifacts:</strong> If the typo wasn't obvious, you could check <code>target/compiled/customers.sql</code> to see the exact table name dbt tried to query. You could then connect to your database and verify that the table does not, in fact, exist under that name.</li>
+                    </ol>
+                </div>
+            </div>
+        `,
+        practices: `
+            <h2>Best Practices & Common Scenarios</h2>
+            <p>The best way to handle errors is to prevent them. Here are some best practices and common situations developers face.</p>
+            <div class="content-section">
+                <div class="step">
+                    <h3>Proactive Best Practices</h3>
+                    <ul>
+                        <li><strong>Write Tests:</strong> Use dbt's generic (<code>unique</code>, <code>not_null</code>) and singular tests to catch data quality issues before they break downstream models. An unexpected NULL can cause a database error in a model that tries to perform math on that column.</li>
+                        <li><strong>Use a SQL Linter:</strong> Integrate a tool like SQLFluff into your development workflow. It can automatically catch syntax errors (like missing commas) before you even run dbt.</li>
+                        <li><strong>Run <code>dbt compile</code> Often:</strong> Before running a full <code>dbt build</code>, use <code>dbt compile</code> to quickly check for Jinja and SQL syntax issues without consuming warehouse credits.</li>
+                        <li><strong>Check Source Freshness:</strong> Use <code>dbt source freshness</code> to ensure your raw data is arriving on schedule. Stale data can cause your models to run on incomplete information, leading to logical errors.</li>
+                    </ul>
+                </div>
+                <div class="step">
+                    <h3>Common Scenarios</h3>
+                    <ul>
+                        <li><strong>"Column is ambiguous":</strong> This happens when you join two tables that have a column with the same name (e.g., <code>id</code>). Fix this by explicitly aliasing your columns, like <code>orders.id AS order_id</code>.</li>
+                        <li><strong>"Model depends on a disabled model":</strong> If you disable a model in <code>dbt_project.yml</code> that other models depend on, you'll get a dependency error. You must either re-enable the parent model or remove the downstream dependencies.</li>
+                        <li><strong>"Macro not found":</strong> If you misspell a macro name or forget to import it from a package, dbt will raise a compilation error. Double-check the macro's name and its package prefix (e.g., <code>dbt_utils.generate_surrogate_key()</code>).</li>
+                    </ul>
+                </div>
+            </div>
+        `,
+        quiz: `
+            <h2>Knowledge Check</h2>
+            <div class="quiz-section" id="quiz-container"></div>
+        `,
+    };
+
+    const QUIZ_QUESTIONS = [
+        { q: '1. You run `dbt run` in the wrong folder. What type of error will you most likely get?', a: 'a', o: { a: 'Runtime Error', b: 'Compilation Error', c: 'Database Error' } },
+        { q: '2. Your model fails with an "ambiguous column name" message. This is a classic example of what error type?', a: 'b', o: { a: 'Dependency Error', b: 'Database Error', c: 'Runtime Error' } },
+        { q: '3. A good first step to debug a complex SQL model that is failing is to...', a: 'c', o: { a: 'Delete the model and start over.', b: 'Immediately check `run_results.json`.', c: 'Examine the compiled SQL in the `target/` directory.' } },
+        { q: '4. You see an error that says "dbt found a cycle in the model graph." This is a...', a: 'b', o: { a: 'Compilation Error', b: 'Dependency Error', c: 'Database Error' } },
+    ];
+
+    // --- 3. INITIALIZATION & RENDERING ---
+    function init() {
+        // Populate tabs
+        for (const [key, value] of Object.entries(CONTENT)) {
+            const tabContent = document.getElementById(key);
+            if (tabContent) {
+                tabContent.innerHTML = value;
+            }
+        }
+        
+        // Populate Quiz
+        const quizContainer = document.getElementById('quiz-container');
+        quizContainer.innerHTML = QUIZ_QUESTIONS.map((q, i) => `
+            <div class="question" id="q${i+1}">
+                <p><strong>${q.q}</strong></p>
+                <div class="options">
+                    ${Object.keys(q.o).map(key => `<label><input type="radio" name="q${i+1}" value="${key}"> ${key}) ${q.o[key]}</label>`).join('')}
+                </div>
+            </div>
+        `).join('') + `<button id="btnCheckQuiz">Check Answers</button><p id="quizResult" style="font-size: 1.2em; font-weight: bold; margin-top: 15px;"></p>`;
+        
+        // Attach event listeners
+        DOM.tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+        document.getElementById('btnCheckQuiz').addEventListener('click', handleQuizCheck);
+    }
+
+    // --- 4. EVENT HANDLERS ---
+    function handleTabClick(event) {
+        const tabName = event.currentTarget.dataset.tab;
+        DOM.tabs.forEach(tab => tab.classList.remove('active'));
+        DOM.tabContents.forEach(content => content.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+    }
+
+    function handleQuizCheck() {
+        let score = 0;
+        QUIZ_QUESTIONS.forEach((q, i) => {
+            const questionEl = document.getElementById(`q${i+1}`);
+            questionEl.querySelectorAll('.feedback').forEach(el => el.remove());
+            const selected = document.querySelector(`input[name="q${i+1}"]:checked`);
+            if (selected) {
+                const feedbackEl = document.createElement('span');
+                feedbackEl.className = 'feedback';
+                if (selected.value === q.a) {
+                    feedbackEl.textContent = '✅ Correct!';
+                    feedbackEl.classList.add('correct');
+                    score++;
+                } else {
+                    feedbackEl.textContent = `❌ Incorrect. The answer is (${q.a}).`;
+                    feedbackEl.classList.add('incorrect');
+                }
+                selected.parentElement.appendChild(feedbackEl);
+            }
+        });
+        document.getElementById('quizResult').textContent = `You scored ${score} out of QUIZ_QUESTIONS.length.`;
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>

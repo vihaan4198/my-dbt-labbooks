@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Model Governance: Interactive Tutorial</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Source+Sans+Pro:wght@400;600;700&display=swap');
+
+        /* --- CSS Variables --- */
+        :root {
+            --bg-color: #f4f4f9;
+            --main-text: #2c3e50;
+            --primary-purple: #8e44ad;
+            --primary-blue: #3498db;
+            --panel-bg: #ffffff;
+            --header-border: #9b59b6;
+            --code-bg-light: #f4f2f8;
+            --code-text-dark: #3b3b3b;
+            --success-color: #2ecc71;
+            --error-color: #e74c3c;
+        }
+
+        /* --- General Layout & Typography --- */
+        body {
+            font-family: 'Source Sans Pro', sans-serif;
+            line-height: 1.6;
+            color: var(--main-text);
+            background-color: var(--bg-color);
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        main.container {
+            max-width: 1200px;
+            width: 100%;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: var(--panel-bg);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            border-radius: 10px;
+            flex-grow: 1;
+        }
+        h1, h2, h3 {
+            font-family: 'Source Sans Pro', sans-serif;
+            font-weight: 700;
+            color: var(--primary-purple);
+        }
+        h1 { font-size: 2.5em; text-align: center; border-bottom: 3px solid var(--header-border); padding-bottom: 10px; }
+        h2 { font-size: 2em; border-bottom: 2px solid #ddd; padding-bottom: 10px; margin-top: 40px; }
+        h3 { font-size: 1.5em; }
+        p, li { font-size: 1.1em; }
+        ul { padding-left: 20px; }
+        pre {
+            font-family: 'Roboto Mono', monospace;
+            background-color: var(--code-bg-light);
+            color: var(--code-text-dark);
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            font-size: 0.9em;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        /* --- Header & Footer --- */
+        .page-header, .page-footer {
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white;
+            padding: 15px 30px;
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .page-header h1 { margin: 0; font-size: 1.8em; color: white; border: none; display: flex; align-items: center; justify-content: center; gap: 15px; }
+        .page-footer { font-size: 1em; display: flex; justify-content: center; align-items: center; gap: 20px; flex-wrap: wrap; }
+        .page-footer a { color: white; text-decoration: none; font-weight: 600; }
+        .page-footer a:hover { text-decoration: underline; }
+        .footer-item { display: flex; align-items: center; gap: 8px; }
+
+        /* --- Tab Navigation --- */
+        .tabs { display: flex; border-bottom: 2px solid #ddd; margin-bottom: 20px; flex-wrap: wrap; }
+        .tab-link { padding: 10px 20px; cursor: pointer; border: none; background: none; font-size: 1.2em; font-weight: 600; color: #95a5a6; transition: color 0.3s ease; }
+        .tab-link:hover { color: var(--primary-purple); }
+        .tab-link.active { color: var(--primary-purple); border-bottom: 3px solid var(--primary-purple); }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; }
+
+        /* --- Demo Components --- */
+        .controls { margin: 20px 0; padding: 20px; background: linear-gradient(135deg, #e5e0f9, #d0e0f0); border-radius: 8px; display: flex; flex-wrap: wrap; gap: 15px; justify-content: center; }
+        button { background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue)); color: white; border: none; padding: 12px 20px; border-radius: 5px; cursor: pointer; font-size: 1em; font-weight: 600; transition: all 0.3s ease; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+        button:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.3); }
+        .demo-section { display: flex; gap: 20px; flex-wrap: wrap; background: #fdfcfe; padding: 20px; border-radius: 8px; border: 1px solid #e0d4e4; }
+        .code-panel, .console-panel { flex: 1; min-width: 400px; }
+        .console-output { background-color: #1e1e1e; color: #d4d4d4; height: 300px; padding: 15px; border-radius: 5px; overflow-y: auto; font-size: 0.9em; }
+        .log-entry { margin-bottom: 5px; }
+        .log-success { color: var(--success-color); }
+        .log-error { color: var(--error-color); }
+        .log-info { color: #569cd6; }
+        .log-command { color: #ce9178; font-style: italic; }
+
+        /* --- Shared Section Styles --- */
+        .quiz-section, .lab-section, .concepts-section { background: #fdfcfe; padding: 20px; border-radius: 8px; border: 1px solid #e0d4e4; }
+        .question { margin-bottom: 20px; }
+        .options label { display: block; margin: 5px 0; cursor: pointer; padding: 10px; border-radius: 5px; }
+        .options label:hover { background-color: #e5e0f9; }
+        .feedback { font-weight: bold; margin-left: 10px; }
+        .correct { color: var(--success-color); }
+        .incorrect { color: var(--error-color); }
+
+        .lab-step, .concept-step {
+            position: relative;
+            padding-left: 60px;
+            margin-bottom: 50px;
+            padding-bottom: 20px;
+            border-bottom: 1px dashed #ccc;
+        }
+        .lab-step:last-child, .concept-step:last-child { border-bottom: none; margin-bottom: 0; }
+        .lab-step::before, .concept-step::before {
+            content: counter(step-counter);
+            counter-increment: step-counter;
+            position: absolute; left: 0; top: -5px; width: 40px; height: 40px;
+            background: linear-gradient(135deg, var(--primary-purple), var(--primary-blue));
+            color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 1.2em; font-weight: bold;
+        }
+        .lab-section, .concepts-section { counter-reset: step-counter; }
+        .lab-step h3, .concept-step h3 { font-size: 1.6em; color: var(--primary-purple); margin-top: 0; border: none; }
+        .lab-step p, .concept-step p { font-size: 1.1em; color: #555; }
+        .simulation-text { margin-top: 15px; padding: 15px; background-color: #eaf7f7; border-radius: 5px; border-left: 4px solid var(--primary-blue); }
+
+    </style>
+</head>
+<body>
+
+<header class="page-header">
+    <h1>🎓 Learn with Vikash</h1>
+</header>
+
+<main class="container">
+    <h1>dbt Model Governance: Interactive Tutorial</h1>
+
+    <div class="tabs">
+        <button class="tab-link active" data-tab="concepts">Key Concepts</button>
+        <button class="tab-link" data-tab="access">Access Control</button>
+        <button class="tab-link" data-tab="demo">Interactive Demo</button>
+        <button class="tab-link" data-tab="lab">Hands-On Lab</button>
+        <button class="tab-link" data-tab="quiz">Knowledge Check</button>
+    </div>
+    
+    <div id="concepts" class="tab-content active">
+        </div>
+    
+    <div id="access" class="tab-content">
+        </div>
+
+    <div id="demo" class="tab-content">
+        <h2>A Tale of Two dbt Runs</h2>
+        <p>Simulate a real-world scenario where a core model changes, and see how governance prevents disaster.</p>
+        <div class="controls">
+            <button id="btnReset">🔄 Reset Demo</button>
+            <button id="btnNoGovChange">🔥 Make Breaking Change (No Governance)</button>
+            <button id="btnGovChange">✅ Attempt Breaking Change (With Governance)</button>
+            <button id="btnDbtRun">▶️ Run `dbt run`</button>
+        </div>
+        <div class="demo-section">
+            <div class="code-panel">
+                <h3>dbt Model Code & Config</h3>
+                <strong>models/core/fct_orders.sql</strong><pre id="codeFctOrders"></pre>
+                <strong>models/reports/rpt_daily_revenue.sql</strong><pre>SELECT
+    order_id,
+    order_status
+FROM {{ ref('fct_orders') }}
+WHERE order_status = 'completed'</pre>
+                <strong>models/core/core.yml</strong><pre id="codeYml"></pre>
+            </div>
+            <div class="console-panel">
+                <h3>dbt Run Log</h3>
+                <div class="console-output" id="consoleOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="lab" class="tab-content">
+        <h2>Build a Governed dbt Model</h2>
+        <p>This lab guides you through setting up versioned dbt models with enforced contracts in your own dbt project. Follow each step to see governance in action.</p>
+        <div class="lab-section">
+            </div>
+    </div>
+
+    <div id="quiz" class="tab-content">
+        <h2>Knowledge Check</h2>
+        <div class="quiz-section" id="quiz-container">
+            </div>
+    </div>
+</main>
+
+<footer class="page-footer">
+    <div class="footer-item"><strong>Vedadots</strong> - Expert in training services on tech stacks for Data, Cloud & AI</div>
+    <div class="footer-item">📧 <a href="mailto:info@vedadots.com">Contact - info@vedadots.com</a></div>
+</footer>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    // --- 1. DOM ELEMENT REFERENCES ---
+    const DOM = {
+        tabs: document.querySelectorAll('.tab-link'),
+        tabContents: document.querySelectorAll('.tab-content'),
+        buttons: {
+            reset: document.getElementById('btnReset'),
+            noGovChange: document.getElementById('btnNoGovChange'),
+            govChange: document.getElementById('btnGovChange'),
+            dbtRun: document.getElementById('btnDbtRun'),
+        },
+        concepts: {
+            section: document.querySelector('#concepts'),
+        },
+        access: {
+            section: document.querySelector('#access'),
+        },
+        demo: {
+            codeFctOrders: document.getElementById('codeFctOrders'),
+            codeYml: document.getElementById('codeYml'),
+            consoleOutput: document.getElementById('consoleOutput'),
+        },
+        lab: {
+            section: document.querySelector('#lab .lab-section'),
+        },
+        quiz: {
+            container: document.getElementById('quiz-container'),
+        }
+    };
+
+    // --- 2. STATE MANAGEMENT & CONTENT ---
+    const CONSTANTS = {
+        INITIAL_FCT_ORDERS_SQL: `SELECT
+    1 AS order_id,
+    'completed' AS order_status`,
+        BROKEN_FCT_ORDERS_SQL: `SELECT
+    1 AS order_id,
+    'completed' AS status -- BREAKING CHANGE: Renamed column!`,
+        INITIAL_YML: `# No contract or versioning defined yet.`,
+        GOVERNED_YML: `models:
+  - name: fct_orders
+    config:
+      contract: {enforced: true}
+    columns:
+      - name: order_id
+        data_type: int
+      - name: order_status # Contract expects this name!
+        data_type: string`,
+        CONCEPTS_HTML: `
+            <h2>The Pillars of a Reliable dbt Project</h2>
+            <p>Let's explore the core concepts that prevent chaos and build trust in your data pipelines.</p>
+            <div class="concepts-section">
+                <h3>What is Model Governance?</h3>
+                <p>Think of it as the <strong>rulebook for your dbt project</strong>. It’s a framework ensuring that models are developed, tested, and deployed in a consistent and reliable way, leading to predictable and stable data transformations.</p>
+                
+                <h3>What is a Model Contract? 🤝</h3>
+                <p>A dbt model contract is a formal, machine-readable agreement on a model's structure. By setting <code>config(contract=true)</code>, you guarantee that a model will <strong>always</strong> produce data with specific column names and data types. If it doesn't, the dbt run fails, preventing bad data from ever breaking downstream dashboards and reports.</p>
+                
+                <h3>Why is Model Versioning Critical? 🏷️</h3>
+                <p>Versioning allows you to introduce breaking changes to a model without immediately destroying all the downstream reports that depend on it. Here are its key benefits:</p>
+                <ul>
+                    <li><strong>Ensures Backward Compatibility:</strong> Allows existing reports and dashboards to continue functioning even as underlying models are updated.</li>
+                    <li><strong>Facilitates Gradual Adoption:</strong> Teams can migrate to new model versions on their own timeline, reducing disruption.</li>
+                    <li><strong>Improves Governance & Traceability:</strong> Provides a clear history of how data models have evolved, aiding in audits and debugging.</li>
+                    <li><strong>Boosts Team Autonomy:</strong> Data producers can evolve their models without constant coordination with every single consumer.</li>
+                    <li><strong>Reduces Technical Debt:</strong> Creates a clear pathway to eventually retire legacy models, preventing an accumulation of unused code.</li>
+                </ul>
+            </div>
+            <h2>Model Evolution & Deprecation Lifecycle</h2>
+            <p>Here is a standard, diagrammatic flow for safely introducing a breaking change to a dbt model.</p>
+            <div class="concepts-section">
+                ${[
+                    { title: 'Identify Need for Breaking Change', text: 'A developer decides to rename a column, which is a breaking change for all downstream consumers.' },
+                    { title: 'Create New Model Version', text: 'Copy the existing model file (e.g., `dim_customers_v2.sql`), apply the breaking change, and define a new contract for `v2` in your `schema.yml`.' },
+                    { title: 'Test New Version Thoroughly', text: 'Run `dbt build --select dim_customers_v2` to validate that the new model builds correctly and its data adheres to the new contract.' },
+                    { title: 'Communicate Deprecation & Migration Plan', text: 'Announce the new `v2` model and provide a clear timeline for when the old `v1` model will be sunset.' },
+                    { title: 'Consumers Migrate to New Version', text: 'Downstream users update their `ref` functions to point to `{{ ref(\'dim_customers\', version=2) }}` on their own schedule.' },
+                    { title: 'Mark Old Model as Deprecated', text: 'In your `schema.yml`, add `deprecated: true` to the config for the `v1` model. dbt will now issue a warning when it runs.' },
+                    { title: 'Monitor Usage of Deprecated Model', text: 'Use data lineage tools or database logs to track any remaining dependencies on the old model before removing it.' },
+                    { title: 'Sunset/Archive Old Model', text: 'Once usage drops to zero, the old model file and its schema configuration can be safely removed, cleaning up the codebase.' }
+                ].map(step => `<div class="concept-step"><h3>${step.title}</h3><p>${step.text}</p></div>`).join('')}
+            </div>
+        `,
+        ACCESS_CONTROL_HTML: `
+            <h2>Managing Access with dbt Grants</h2>
+            <p>While your database (like Snowflake or BigQuery) is responsible for <strong>enforcing</strong> security, dbt provides a powerful, version-controlled way to <strong>manage</strong> who gets access to your data models.</p>
+            <div class="concepts-section">
+                <h3>dbt's Role: Access Control as Code</h3>
+                <p>Instead of manually running <code>GRANT SELECT ON ...</code> commands after every dbt run, you can define these permissions directly in your dbt project. This turns access control into code that can be reviewed, versioned, and automatically applied with every deployment.</p>
+                
+                <h3>The <code>grants</code> Configuration</h3>
+                <p>You can add a <code>grants</code> configuration to any dbt model. This tells dbt which database roles should receive specific permissions (like <code>SELECT</code>) on the table or view that dbt creates. This is typically done in your <code>schema.yml</code> file.</p>
+                <pre><code># In models/core/schema.yml
+models:
+  - name: fct_orders
+    config:
+      grants:
+        select: ['analyst_role', 'bi_dev_role']
+    columns:
+      - name: order_id
+        # ... other columns</code></pre>
+            </div>
+            <h2>Access Control Flow with dbt</h2>
+            <p>Here’s how dbt fits into the broader data security lifecycle.</p>
+            <div class="concepts-section">
+                ${[
+                    { title: 'Define Roles & Permissions (Database Level)', text: 'This happens outside of dbt. A Database Administrator (DBA) creates roles like <code>ANALYST_ROLE</code> and assigns users to them.' },
+                    { title: 'Define Model & Grants in dbt', text: 'A data developer writes the model SQL. In the corresponding <code>schema.yml</code>, they specify which of the pre-defined roles should get <code>SELECT</code> access.' },
+                    { title: 'dbt Applies the Grants', text: 'When you run <code>dbt run</code>, dbt builds the model and then automatically runs the necessary <code>GRANT</code> statements against the database, applying the permissions you defined as code.' }
+                ].map(step => `<div class="concept-step"><h3>${step.title}</h3><p>${step.text}</p></div>`).join('')}
+            </div>
+        `,
+        LAB_STEPS: [
+            { title: 'Define Models, Versions, and Contracts', text: 'In your `models/` directory, create a `.yml` file to define two versions of `fct_orders`, each with an enforced contract.', code: `models:
+  - name: fct_orders
+    latest_version: 2
+    versions:
+      - v: 1
+        config:
+          contract: {enforced: true}
+        columns:
+          - name: order_id
+            data_type: int
+          - name: order_status
+            data_type: string
+      - v: 2
+        config:
+          contract: {enforced: true}
+        columns:
+          - name: order_id
+            data_type: int
+          - name: status  # The breaking change is here!
+            data_type: string` },
+            { title: 'Create the v1 Model Logic', text: 'Create a file named `fct_orders_v1.sql`. This SQL must match the `v1` contract.', code: `-- This model adheres to the v1 contract
+SELECT
+    1 AS order_id,
+    'completed' AS order_status` },
+            { title: 'Create the v2 Model Logic', text: 'Create `fct_orders_v2.sql`. This version contains the breaking change (renamed column) and matches the `v2` contract.', code: `-- This model adheres to the v2 contract
+SELECT
+    1 AS order_id,
+    'completed' AS status` },
+            { title: 'Create the Downstream Consumer', text: 'Create `rpt_daily_revenue.sql`. Explicitly reference `version=1` of the upstream model to ensure stability.', code: `-- This report depends on the stable v1 of fct_orders
+SELECT
+    order_id,
+    order_status
+FROM {{ ref('fct_orders', version=1) }}
+WHERE order_status = 'completed'` },
+            { title: 'Run the Initial Build', text: 'Run `dbt run` in your project. Everything should succeed because the downstream model is correctly pinned to the stable v1.', simulation: `✅ Everything will succeed. \`rpt_daily_revenue\` correctly uses \`v1\` of \`fct_orders\`.` },
+            { title: 'The Challenge: Simulate an Incident', text: 'Intentionally introduce a breaking change in the `v1` model file (`fct_orders_v1.sql`) by renaming `order_status` to `status`. Then, try to run only that model.', simulation: `Run \`dbt run -s fct_orders_v1\`. The run will **FAIL** because the SQL output no longer matches the v1 contract. You've just prevented a production incident! 🛡️` },
+        ],
+        QUIZ_QUESTIONS: [
+            { q: '1. You add a new, non-essential column (`customer_notes`) to a `dim_customers` model. What is the best practice?', a: 'b', o: { a: 'Create a new MAJOR version (v2).', b: 'This is a MINOR, non-breaking change. Update the existing version.', c: 'Contracts are not for dimensional models.' } },
+            { q: '2. What is the primary benefit of `config(contract=true)` for a Data Ops team?', a: 'b', o: { a: 'It makes the SQL code run faster.', b: 'It guarantees a stable schema, preventing downstream failures.', c: 'It automatically documents the model.' } },
+            { q: '3. You need to change a data type from `string` to `integer` in `fct_transactions` (v1). What is the safest way?', a: 'b', o: { a: 'Just change the data type and hope for the best.', b: 'Create a new `version: 2` with the new contract, leaving v1 untouched.', c: 'Delete the old model and replace it.' } },
+        ]
+    };
+
+    let state = {};
+
+    function resetState() {
+        state = {
+            fctOrdersSQL: CONSTANTS.INITIAL_FCT_ORDERS_SQL,
+            yml: CONSTANTS.INITIAL_YML,
+            hasContract: false,
+        };
+    }
+
+    // --- 3. UI UPDATE & RENDERING ---
+    function updateUI() {
+        DOM.demo.codeFctOrders.textContent = state.fctOrdersSQL;
+        DOM.demo.codeYml.textContent = state.yml;
+    }
+
+    function logToConsole(message, type = 'info') {
+        const entry = document.createElement('div');
+        entry.className = `log-entry log-${type}`;
+        entry.textContent = message;
+        DOM.demo.consoleOutput.appendChild(entry);
+        DOM.demo.consoleOutput.scrollTop = DOM.demo.consoleOutput.scrollHeight;
+    }
+    
+    function populateConcepts() {
+        DOM.concepts.section.innerHTML = CONSTANTS.CONCEPTS_HTML;
+    }
+
+    function populateAccessControl() {
+        DOM.access.section.innerHTML = CONSTANTS.ACCESS_CONTROL_HTML;
+    }
+
+    function populateLab() {
+        DOM.lab.section.innerHTML = CONSTANTS.LAB_STEPS.map(step => `
+            <div class="lab-step">
+                <h3>${step.title}</h3>
+                <p>${step.text}</p>
+                ${step.code ? `<pre><code>${step.code.replace(/</g, "&lt;").replace(/>/g, "&gt;")}</code></pre>` : ''}
+                ${step.simulation ? `<div class="simulation-text">${step.simulation}</div>` : ''}
+            </div>
+        `).join('');
+    }
+
+    function populateQuiz() {
+        DOM.quiz.container.innerHTML = CONSTANTS.QUIZ_QUESTIONS.map((q, i) => `
+            <div class="question" id="q${i+1}">
+                <p><strong>${q.q}</strong></p>
+                <div class="options">
+                    ${Object.keys(q.o).map(key => `<label><input type="radio" name="q${i+1}" value="${key}"> ${key}) ${q.o[key]}</label>`).join('')}
+                </div>
+            </div>
+        `).join('') + `<button id="btnCheckQuiz">Check Answers</button><p id="quizResult" style="font-size: 1.2em; font-weight: bold; margin-top: 15px;"></p>`;
+        
+        document.getElementById('btnCheckQuiz').addEventListener('click', handleQuizCheck);
+    }
+
+
+    // --- 4. EVENT HANDLERS & LOGIC ---
+    function handleTabClick(event) {
+        const tabName = event.currentTarget.dataset.tab;
+        DOM.tabs.forEach(tab => tab.classList.remove('active'));
+        DOM.tabContents.forEach(content => content.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabName).classList.add('active');
+    }
+
+    function handleResetClick() {
+        resetState();
+        updateUI();
+        DOM.demo.consoleOutput.innerHTML = '';
+        logToConsole('🔄 Demo has been reset to its initial state.');
+    }
+
+    function handleSimulateChange(withGovernance) {
+        handleResetClick();
+        if (withGovernance) {
+            state.hasContract = true;
+            state.yml = CONSTANTS.GOVERNED_YML;
+            logToConsole('✅ Governance applied: A contract is now enforced on `fct_orders`.');
+        } else {
+            logToConsole('🔥 Simulating a scenario with no governance.');
+        }
+        state.fctOrdersSQL = CONSTANTS.BROKEN_FCT_ORDERS_SQL;
+        updateUI();
+        logToConsole('🧑‍💻 Analyst renamed `order_status` to `status` in `fct_orders`.');
+        logToConsole('Click "Run dbt run" to see the outcome.', 'command');
+    }
+    
+    function handleDbtRun() {
+        logToConsole('$ dbt run', 'command');
+        const hasBreakingChange = state.fctOrdersSQL.includes('AS status');
+        let fctOrdersPasses = true;
+
+        if (state.hasContract && hasBreakingChange) {
+            logToConsole('1/2 START model core.fct_orders... [RUN]');
+            logToConsole('ERROR: Contract violation! Model output does not match contract.', 'error');
+            logToConsole('1/2 FAIL model core.fct_orders... [FAIL]', 'error');
+            fctOrdersPasses = false;
+        } else {
+            logToConsole('1/2 START model core.fct_orders... [RUN]');
+            logToConsole('1/2 OK created model core.fct_orders... [SUCCESS]', 'success');
+        }
+
+        if (!fctOrdersPasses) {
+            logToConsole('2/2 SKIP model reports.rpt_daily_revenue... [SKIP]');
+            logToConsole('💡 The contract stopped the bad change!', 'info');
+        } else if (hasBreakingChange) {
+            logToConsole('2/2 START model reports.rpt_daily_revenue... [RUN]');
+            logToConsole('SQL Compilation Error: column "order_status" does not exist', 'error');
+            logToConsole('2/2 FAIL model reports.rpt_daily_revenue... [FAIL]', 'error');
+            logToConsole('🔥 The downstream pipeline broke!', 'error');
+        } else {
+            logToConsole('2/2 START model reports.rpt_daily_revenue... [RUN]');
+            logToConsole('2/2 OK created model reports.rpt_daily_revenue... [SUCCESS]', 'success');
+        }
+    }
+
+    function handleQuizCheck() {
+        let score = 0;
+        CONSTANTS.QUIZ_QUESTIONS.forEach((q, i) => {
+            const questionEl = document.getElementById(`q${i+1}`);
+            questionEl.querySelectorAll('.feedback').forEach(el => el.remove());
+            const selected = document.querySelector(`input[name="q${i+1}"]:checked`);
+            if (selected) {
+                const feedbackEl = document.createElement('span');
+                feedbackEl.className = 'feedback';
+                if (selected.value === q.a) {
+                    feedbackEl.textContent = '✅ Correct!';
+                    feedbackEl.classList.add('correct');
+                    score++;
+                } else {
+                    feedbackEl.textContent = `❌ Incorrect. The answer is (${q.a}).`;
+                    feedbackEl.classList.add('incorrect');
+                }
+                selected.parentElement.appendChild(feedbackEl);
+            }
+        });
+        document.getElementById('quizResult').textContent = `You scored ${score} out of ${CONSTANTS.QUIZ_QUESTIONS.length}.`;
+    }
+
+    // --- 5. INITIALIZATION ---
+    function init() {
+        // Attach event listeners
+        DOM.tabs.forEach(tab => tab.addEventListener('click', handleTabClick));
+        DOM.buttons.reset.addEventListener('click', handleResetClick);
+        DOM.buttons.noGovChange.addEventListener('click', () => handleSimulateChange(false));
+        DOM.buttons.govChange.addEventListener('click', () => handleSimulateChange(true));
+        DOM.buttons.dbtRun.addEventListener('click', handleDbtRun);
+        
+        // Populate dynamic content
+        populateConcepts();
+        populateAccessControl();
+        populateLab();
+        populateQuiz();
+        
+        // Set initial state and UI
+        handleResetClick();
+    }
+
+    init();
+});
+</script>
+
+</body>
+</html>
