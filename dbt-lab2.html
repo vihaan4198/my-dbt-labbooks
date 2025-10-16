@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive dbt Lab Guide: Environments & Data Quality</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chosen Palette: Slate & Teal -->
+    <!-- Application Structure Plan: The SPA is designed as a linear, multi-part lab guide that users scroll through vertically. This structure is intuitive for a step-by-step process. Key interactions are embedded within each part: tabbed views for complex YAML files (schema.yml) to break them down, and a mock terminal to simulate the dbt workflow. This was chosen to transform a passive reading exercise into an active learning experience, allowing users to "run" commands and see immediate, pre-canned results, reinforcing the cause-and-effect of their actions in a safe environment. -->
+    <!-- Visualization & Content Choices: 1. Code Blocks (SQL/YAML/CLI) -> Goal: Usability -> Presentation: Styled <pre> with a 'Copy' button -> Interaction: Click to copy -> Justification: Reduces user friction and errors. 2. `schema.yml` Content -> Goal: Organize/Compare -> Presentation: Tabbed View (Sources vs. Models) -> Interaction: Click tabs -> Justification: Simplifies a complex file into logical, digestible sections. 3. Environment Architecture -> Goal: Inform -> Presentation: HTML/CSS Diagram -> Interaction: Static view -> Justification: Visually clarifies the core concept of isolated databases for dev and test. 4. dbt Workflow -> Goal: Simulate -> Presentation: Mock Terminal UI -> Interaction: Click buttons to "run" commands and see animated output -> Justification: Creates the most impactful learning moment by demonstrating the lab's outcome interactively. -->
+    <!-- CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        .part-indicator {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 3rem;
+            height: 3rem;
+            border-radius: 9999px;
+            background-color: #0f766e; /* teal-700 */
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 1.25rem;
+            flex-shrink: 0;
+            border: 4px solid #ccfbf1; /* teal-100 */
+        }
+        .code-block {
+            position: relative;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            background-color: #334155; /* slate-700 */
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: all 0.2s ease-in-out;
+        }
+        .code-block:hover .copy-btn {
+            opacity: 1;
+            background-color: #475569; /* slate-600 */
+        }
+        .config-tab {
+            cursor: pointer;
+            padding: 0.75rem 1.25rem;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        .config-tab.active {
+            border-bottom-color: #0d9488; /* teal-600 */
+            color: #0d9488; /* teal-600 */
+        }
+        .terminal-output .prompt { color: #14b8a6; } /* teal-500 */
+        .terminal-output .success { color: #22c55e; } /* green-500 */
+        .terminal-output .fail { color: #ef4444; } /* red-500 */
+        .terminal-output .warn { color: #f59e0b; } /* amber-500 */
+        .faq-item summary {
+            cursor: pointer;
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-700">
+
+    <div class="container mx-auto p-4 md:p-8 max-w-6xl">
+        
+        <header class="text-center my-8 md:my-12">
+            <h1 class="text-4xl md:text-5xl font-bold text-slate-900">Interactive Lab: dbt Environments & Data Quality</h1>
+            <p class="text-xl text-slate-600 mt-4">Develop in one environment, test in another. A hands-on guide.</p>
+        </header>
+
+        <!-- Part 1: Setup -->
+        <section id="part1" class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="part-indicator">1</div>
+                <h2 class="text-3xl font-bold ml-6 text-slate-800">Setting the Stage: Source Data</h2>
+            </div>
+            <p class="mb-6 text-lg">First, we'll create our source tables in Snowflake. This SQL includes intentionally "bad" data—records with `NULL` values, negative prices, and invalid foreign keys. This allows us to see our dbt tests in action later.</p>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                <h3 class="font-semibold text-xl mb-4 text-slate-900">Snowflake Setup SQL</h3>
+                <div class="code-block bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto">
+                    <button class="copy-btn" data-code-id="snowflake-setup-code">Copy</button>
+                    <pre><code id="snowflake-setup-code" class="language-sql">-- Use a role with sufficient permissions, like SYSADMIN
+USE ROLE SYSADMIN;
+
+-- Create a database and schema for our raw source data
+CREATE DATABASE IF NOT EXISTS ESHOPALOT_RAW;
+CREATE SCHEMA IF NOT EXISTS ESHOPALOT_RAW.RAW_DATA;
+
+-- Grant usage to your dbt role (replace 'DBT_USER_ROLE' with your actual role)
+GRANT USAGE ON DATABASE ESHOPALOT_RAW TO ROLE DBT_USER_ROLE;
+GRANT USAGE ON SCHEMA ESHOPALOT_RAW.RAW_DATA TO ROLE DBT_USER_ROLE;
+GRANT SELECT ON FUTURE TABLES IN SCHEMA ESHOPALOT_RAW.RAW_DATA TO ROLE DBT_USER_ROLE;
+
+-- Create source tables
+CREATE OR REPLACE TABLE ESHOPALOT_RAW.RAW_DATA.RAW_PRODUCTS (
+    PRODUCT_ID NUMBER, PRODUCT_NAME VARCHAR, CATEGORY VARCHAR,
+    PRICE NUMBER(10, 2), SUPPLIER_ID NUMBER, CREATED_AT TIMESTAMP_NTZ
+);
+CREATE OR REPLACE TABLE ESHOPALOT_RAW.RAW_DATA.RAW_SUPPLIERS (
+    SUPPLIER_ID NUMBER, SUPPLIER_NAME VARCHAR, COUNTRY VARCHAR
+);
+
+-- Insert sample data (including records that will fail tests)
+INSERT INTO ESHOPALOT_RAW.RAW_DATA.RAW_PRODUCTS VALUES
+(101, 'Wireless Pro Mouse', 'Electronics', 79.99, 1, '2025-10-15 09:00:00'),
+(102, 'Gaming Keyboard', 'Electronics', 129.50, 1, '2025-10-15 09:05:00'),
+(103, 'Organic Coffee Beans', 'Groceries', 22.00, 2, '2025-10-15 09:10:00'),
+(104, NULL, 'Fitness', 45.00, 3, '2025-10-15 09:15:00'),
+(105, 'Bluetooth Speaker', 'Electronics', -5.00, 1, '2025-10-15 09:20:00'),
+(106, 'Ergonomic Chair', 'Furniture', 250.00, 99, '2025-10-15 09:25:00');
+
+INSERT INTO ESHOPALOT_RAW.RAW_DATA.RAW_SUPPLIERS VALUES
+(1, 'TechGlobal Inc.', 'USA'),
+(2, 'FarmFresh Goods', 'Canada'),
+(3, 'FitLife Co.', 'USA');
+
+-- Grant select on existing tables
+GRANT SELECT ON ALL TABLES IN SCHEMA ESHOPALOT_RAW.RAW_DATA TO ROLE DBT_USER_ROLE;
+</code></pre>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Part 2: schema.yml -->
+        <section id="part2" class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="part-indicator">2</div>
+                <h2 class="text-3xl font-bold ml-6 text-slate-800">Defining Quality Gates: `schema.yml`</h2>
+            </div>
+            <p class="mb-6 text-lg">The `schema.yml` file is where you document your project and define data quality tests. Use the tabs below to explore how we define sources and apply constraints to our final model, `dim_products`.</p>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                <div class="border-b border-slate-200 mb-4">
+                    <nav class="flex -mb-px">
+                        <button class="config-tab active" data-target="models-config">Models</button>
+                        <button class="config-tab" data-target="sources-config">Sources</button>
+                    </nav>
+                </div>
+                <div id="config-content">
+                    <!-- Content will be injected by JS -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 3: Environments -->
+        <section id="part3" class="mb-16">
+             <div class="flex items-center mb-6">
+                <div class="part-indicator">3</div>
+                <h2 class="text-3xl font-bold ml-6 text-slate-800">Building Environments</h2>
+            </div>
+            <p class="mb-6 text-lg">A professional workflow requires isolated environments. We'll set up a new `DBT_TEST_DB` in Snowflake and then configure `profiles.yml` to allow dbt to connect to either our `dev` or `test` database.</p>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="font-semibold text-xl mb-4 text-slate-900">Step 3.1: Create Test DB</h3>
+                    <div class="code-block bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto">
+                        <button class="copy-btn" data-code-id="test-db-code">Copy</button>
+                        <pre><code id="test-db-code" class="language-sql">USE ROLE SYSADMIN;
+CREATE DATABASE IF NOT EXISTS DBT_TEST_DB;
+GRANT OWNERSHIP ON DATABASE DBT_TEST_DB TO ROLE DBT_USER_ROLE;
+</code></pre>
+                    </div>
+                    <div class="mt-4 p-4 bg-teal-50 border border-teal-200 rounded-lg text-teal-800">
+                        Granting `OWNERSHIP` is the simplest way to ensure your dbt role has all necessary permissions within this new database.
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                    <h3 class="font-semibold text-xl mb-4 text-slate-900">Step 3.2: Configure `profiles.yml`</h3>
+                     <div class="code-block bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto">
+                        <button class="copy-btn" data-code-id="profiles-code">Copy</button>
+                        <pre><code id="profiles-code" class="language-yaml">your_project_name:
+  target: dev
+  outputs:
+    dev:
+      type: snowflake
+      # ... your credentials ...
+      database: DBT_DEV_DB
+      schema: dbt_your_name
+
+    # Add this new test target
+    test:
+      type: snowflake
+      # ... your credentials ...
+      database: DBT_TEST_DB
+      schema: dbt_test_runs
+</code></pre>
+                    </div>
+                </div>
+            </div>
+             <div class="mt-8 bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                <h3 class="font-semibold text-xl mb-4 text-slate-900">Visualizing the Setup</h3>
+                <div class="flex flex-col md:flex-row items-center justify-around text-center">
+                    <div class="p-4 border-2 border-slate-300 rounded-lg w-full md:w-1/3 mb-4 md:mb-0">
+                        <p class="font-bold text-slate-800 text-lg">DEV</p>
+                        <p class="text-sm">profiles.yml (`dev` target)</p>
+                        <p class="text-3xl my-2">➔</p>
+                        <p class="font-mono bg-slate-200 px-2 py-1 rounded">DBT_DEV_DB</p>
+                    </div>
+                    <div class="p-4 border-2 border-dashed border-teal-500 rounded-lg w-full md:w-1/3">
+                        <p class="font-bold text-teal-700 text-lg">TEST</p>
+                        <p class="text-sm">profiles.yml (`test` target)</p>
+                        <p class="text-3xl my-2 text-teal-600">➔</p>
+                        <p class="font-mono bg-teal-100 text-teal-800 px-2 py-1 rounded">DBT_TEST_DB</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 4: Workflow Simulation -->
+        <section id="part4" class="mb-16">
+            <div class="flex items-center mb-6">
+                <div class="part-indicator">4</div>
+                <h2 class="text-3xl font-bold ml-6 text-slate-800">Workflow Simulation</h2>
+            </div>
+            <p class="mb-6 text-lg">This is where it all comes together. Use the mock terminal below to simulate running dbt against our clean `test` environment. This is the same process a CI/CD job would follow to validate your changes.</p>
+            
+            <div class="bg-white p-6 rounded-lg shadow-md border border-slate-200">
+                <div class="bg-slate-900 rounded-lg p-4 font-mono text-sm text-white min-h-[300px]">
+                    <div class="flex items-center space-x-4 mb-4">
+                        <button id="run-btn" class="bg-teal-600 hover:bg-teal-700 px-4 py-2 rounded-md transition">dbt run --target test</button>
+                        <button id="test-btn" class="bg-amber-500 hover:bg-amber-600 px-4 py-2 rounded-md transition">dbt test --target test</button>
+                    </div>
+                    <div id="terminal-output" class="terminal-output whitespace-pre-wrap">
+                        <span class="prompt">~ </span><span>Click a command to start the simulation.</span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Part 5: FAQ -->
+        <section id="part5">
+            <div class="flex items-center mb-6">
+                <div class="part-indicator">5</div>
+                <h2 class="text-3xl font-bold ml-6 text-slate-800">Best Practices & FAQ</h2>
+            </div>
+            <div class="space-y-4">
+                <details class="faq-item bg-white p-4 rounded-lg shadow-sm border border-slate-200" open>
+                    <summary class="font-semibold text-lg text-slate-800">Best Practice: Use the `target` variable</summary>
+                    <div class="mt-2 text-slate-600 prose">
+                        <p>In your models, you can use `{{ '{{' }} target.name {{ '}}' }}` to apply logic specific to an environment. This is powerful for limiting data in development to speed up runs.</p>
+                        <div class="code-block bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto">
+                            <pre><code>SELECT * FROM {{ '{{' }} ref('huge_fact_table') {{ '}}' }}
+{% '{{' %}} if target.name == 'dev' {% '}}' %}
+WHERE event_timestamp >= DATEADD('day', -3, CURRENT_TIMESTAMP())
+{% '{{' %}} endif {% '}}' %}</code></pre>
+                        </div>
+                    </div>
+                </details>
+                <details class="faq-item bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <summary class="font-semibold text-lg text-slate-800">Issue: My models are building in the wrong database!</summary>
+                    <div class="mt-2 text-slate-600">
+                        <p>You most likely forgot to add the <strong>`--target test`</strong> flag to your command. If you just run `dbt run`, dbt uses the `target` set as the default in your `profiles.yml`, which is usually `dev`.</p>
+                    </div>
+                </details>
+                <details class="faq-item bg-white p-4 rounded-lg shadow-sm border border-slate-200">
+                    <summary class="font-semibold text-lg text-slate-800">Issue: Permission error on `dbt run`</summary>
+                    <div class="mt-2 text-slate-600">
+                        <p>If you see a "not authorized" error, it means the role specified in your `test` profile (e.g., `DBT_USER_ROLE`) doesn't have the right permissions on the target database (`DBT_TEST_DB`). The easiest fix is to grant `OWNERSHIP` of the database to your dbt role, as shown in Part 3.</p>
+                    </div>
+                </details>
+            </div>
+        </section>
+
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- Copy to Clipboard Functionality ---
+    document.querySelectorAll('.copy-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const codeId = button.dataset.codeId;
+            const codeElement = document.getElementById(codeId);
+            navigator.clipboard.writeText(codeElement.innerText).then(() => {
+                button.textContent = 'Copied!';
+                setTimeout(() => { button.textContent = 'Copy'; }, 2000);
+            });
+        });
+    });
+
+    // --- Tabbed Configuration View ---
+    const configTabs = document.querySelectorAll('.config-tab');
+    const configContentEl = document.getElementById('config-content');
+    const configData = {
+        'models-config': {
+            title: 'Model Definitions (`models/marts/schema.yml`)',
+            code: `version: 2
+
+models:
+  - name: dim_products
+    description: "A dimension table for products, enriched with supplier information."
+    tags: ['dimensions', 'reporting']
+    columns:
+      - name: product_id
+        description: "The unique identifier for a product. This is the primary key."
+        tests:
+          - unique
+          - not_null
+
+      - name: product_name
+        description: "The display name of the product."
+        tests:
+          - not_null # This test will fail
+
+      - name: price
+        description: "The retail price of the product."
+        tests:
+          - dbt_utils.expression_is_true:
+              expression: ">= 0" # This test will fail
+
+      - name: supplier_id
+        description: "The foreign key to the suppliers dimension."
+        tests:
+          - relationships:
+              to: ref('dim_suppliers')
+              field: supplier_id # This test will fail`
+        },
+        'sources-config': {
+            title: 'Source Definitions (`models/marts/schema.yml`)',
+            code: `version: 2
+
+sources:
+  - name: eshopalot_raw_data
+    database: eshopalot_raw
+    schema: raw_data
+    tables:
+      - name: raw_products
+        loaded_at_field: created_at
+        freshness:
+          warn_after: {count: 24, period: hour}
+          error_after: {count: 48, period: hour}
+      - name: raw_suppliers`
+        }
+    };
+
+    function renderConfigContent(target) {
+        const content = configData[target];
+        configContentEl.innerHTML = `
+            <h3 class="font-semibold text-xl mb-4 text-slate-900">${content.title}</h3>
+            <div class="code-block bg-slate-800 text-white p-4 rounded-lg text-sm overflow-x-auto">
+                <button class="copy-btn" data-code-id="config-code-${target}">Copy</button>
+                <pre><code id="config-code-${target}" class="language-yaml">${content.code}</code></pre>
+            </div>
+        `;
+        // Re-attach listener for the new button
+        configContentEl.querySelector('.copy-btn').addEventListener('click', (e) => {
+            const codeId = e.target.dataset.codeId;
+            const codeElement = document.getElementById(codeId);
+            navigator.clipboard.writeText(codeElement.innerText).then(() => {
+                e.target.textContent = 'Copied!';
+                setTimeout(() => { e.target.textContent = 'Copy'; }, 2000);
+            });
+        });
+    }
+
+    configTabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            configTabs.forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+            renderConfigContent(tab.dataset.target);
+        });
+    });
+
+    renderConfigContent('models-config');
+
+    // --- Mock Terminal ---
+    const runBtn = document.getElementById('run-btn');
+    const testBtn = document.getElementById('test-btn');
+    const terminalOutput = document.getElementById('terminal-output');
+    let isRunning = false;
+
+    const runOutput = [
+        "14:02:14  Running with dbt=1.7.9",
+        "14:02:15  Found 3 models, 4 tests, 0 sources, 0 exposures, 0 metrics, 0 groups",
+        "14:02:16  Concurrency: 4 threads (target='test')",
+        "14:02:17  1 of 3 START sql view model dbt_test_runs.stg_products................... [RUN]",
+        "14:02:18  1 of 3 OK created sql view model dbt_test_runs.stg_products............. [SUCCESS 1 in 1.05s]",
+        "14:02:18  2 of 3 START sql view model dbt_test_runs.stg_suppliers.................. [RUN]",
+        "14:02:19  2 of 3 OK created sql view model dbt_test_runs.stg_suppliers............ [SUCCESS 1 in 1.10s]",
+        "14:02:19  3 of 3 START sql table model dbt_test_runs.dim_products.................. [RUN]",
+        "14:02:21  3 of 3 OK created sql table model dbt_test_runs.dim_products............ [SUCCESS 1 in 2.15s]",
+        "14:02:22  Finished running 2 view models, 1 table model in 8.32s.",
+        "<span class='success'>COMPLETED SUCCESSFULLY</span>"
+    ];
+
+    const testOutput = [
+        "14:03:01  Running with dbt=1.7.9",
+        "14:03:02  Found 3 models, 4 tests...",
+        "14:03:03  1 of 4 START test not_null_dim_products_product_name.................... [RUN]",
+        "14:03:04  <span class='fail'>1 of 4 FAIL 1</span>............................................................. [FAIL 1 in 1.12s]",
+        "14:03:04  2 of 4 START test expression_is_true_dim_products_price__0.............. [RUN]",
+        "14:03:05  <span class='fail'>2 of 4 FAIL 1</span>............................................................. [FAIL 1 in 1.08s]",
+        "14:03:05  3 of 4 START test relationships_dim_products_supplier_id__... [RUN]",
+        "14:03:06  <span class='fail'>3 of 4 FAIL 1</span>............................................................. [FAIL 1 in 1.21s]",
+        "14:03:06  4 of 4 START test unique_dim_products_product_id........................ [RUN]",
+        "14:03:07  <span class='success'>4 of 4 PASS</span>............................................................. [PASS in 0.98s]",
+        "14:03:08  Finished running 4 tests in 10.15s.",
+        "<span class='fail'>COMPLETED WITH 3 FAILURES</span>"
+    ];
+
+    function typeEffect(lines) {
+        if (isRunning) return;
+        isRunning = true;
+        terminalOutput.innerHTML = '';
+        let lineIndex = 0;
+
+        function typeLine() {
+            if (lineIndex < lines.length) {
+                const p = document.createElement('p');
+                p.innerHTML = lines[lineIndex];
+                terminalOutput.appendChild(p);
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                lineIndex++;
+                setTimeout(typeLine, 150 + Math.random() * 100);
+            } else {
+                const prompt = document.createElement('p');
+                prompt.innerHTML = `<span class="prompt">~ </span><span>Ready for next command.</span>`;
+                terminalOutput.appendChild(prompt);
+                terminalOutput.scrollTop = terminalOutput.scrollHeight;
+                isRunning = false;
+            }
+        }
+        typeLine();
+    }
+
+    runBtn.addEventListener('click', () => typeEffect(runOutput));
+    testBtn.addEventListener('click', () => typeEffect(testOutput));
+});
+</script>
+
+</body>
+</html>
+
