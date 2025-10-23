@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Jobs Knowledge Check</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+
+        /* Flip Card Styles */
+        .flip-card-container {
+            display: none; /* Hide all cards initially */
+        }
+        .flip-card-container.active {
+            display: block; /* Show only the active card */
+        }
+
+        .flip-card {
+            background-color: transparent;
+            min-height: 350px; /* Increased height slightly */
+            border: none;
+            perspective: 1000px; 
+            margin: 0 auto; /* Center the card */
+            max-width: 600px; /* Limit card width */
+        }
+
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            min-height: 350px; 
+        }
+
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden; 
+            backface-visibility: hidden;
+            display: flex; 
+            flex-direction: column; 
+        }
+
+        .flip-card-front {
+            background-color: #fff;
+            color: black;
+        }
+
+        .flip-card-back {
+            background-color: var(--bs-primary-light);
+            color: var(--bs-dark-purple);
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front .card-body, .flip-card-back .card-body {
+            flex-grow: 1; 
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between; 
+        }
+        
+        .flip-card-back strong {
+            color: var(--bs-primary);
+        }
+        
+        .quiz-intro {
+            background-color: var(--bs-info-light);
+            border-left: 5px solid var(--bs-info);
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0.25rem;
+        }
+        
+         /* Code Block Styling */
+        .code-block {
+            background-color: var(--bs-dark-purple);
+            color: #f8f8f2;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            text-align: left;
+            margin-top: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .code-block .comment { color: #9a9a9a; }
+
+        /* Progress Bar Styling */
+        .progress-container {
+            margin-bottom: 2rem;
+            max-width: 600px; /* Match card width */
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .progress-label {
+            font-size: 0.9em;
+            color: #666;
+            margin-bottom: 0.5rem;
+            text-align: center;
+        }
+        
+        /* Navigation Buttons Styling */
+        .navigation-buttons {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1.5rem;
+             max-width: 600px; /* Match card width */
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container mt-5">
+            <div class="text-center mb-4">
+                <h1 class="display-5" style="color: var(--bs-primary);"><i class="bi bi-card-checklist me-2"></i>dbt Jobs Knowledge Check</h1>
+                <p class="lead">Test your understanding of dbt Jobs concepts for the certification exam.</p>
+            </div>
+
+            <div class="quiz-intro">
+                <h4 class="alert-heading">Your Scenario</h4>
+                <p>You're part of a data team managing a production dbt project. You face common challenges related to deployments, migrations, and ensuring data quality.</p>
+                <hr>
+                <p class="mb-0">Click the <strong>"Flip to Answer"</strong> button on each card to test yourself! Use the navigation buttons below the card to move between questions.</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+        
+            <div class="progress-container">
+                 <div id="progress-label" class="progress-label">Question 1 of 10</div>
+                 <div class="progress" role="progressbar" aria-label="Quiz progress" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" style="height: 15px">
+                    <div id="progress-bar" class="progress-bar bg-primary" style="width: 0%"></div>
+                </div>
+            </div>
+
+            <div id="quizCardArea">
+                <div class="flip-card-container active">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 1</h5>
+                                        <p class="card-text fs-5">How will dbt Cloud test your PR *without* re-building the entire 500-model project?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Using <strong>"Slim CI" with Deferral</strong>.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> The CI job builds only modified models + children (<code>state:modified+</code>) and uses <code>--defer</code> to reference the production <code>manifest.json</code> for upstream models, pointing to existing production tables instead of rebuilding them. This makes CI fast.</small></p>
+                                    </div>
+                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 2</h5>
+                                        <p class="card-text fs-5">The 6 AM production job failed on <code>fct_orders</code>. How can you re-run *only* that model and everything that depends on it?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Trigger a new job run using the graph selector <code>+fct_orders</code>.</p>
+<div class="code-block"><pre><code class="language-bash">dbt build --select +fct_orders</code></pre></div>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> The <code>+</code> operator placed *before* the model name selects that model *and all of its downstream dependents*. This ensures that if <code>fct_orders</code> changed, all models relying on its output are also rebuilt.</small></p>
+                                    </div>
+                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 3</h5>
+                                        <p class="card-text fs-5">What is the *key dbt artifact* that makes "Slim CI" and "Deferral" possible?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> The <code><strong>manifest.json</strong></code> artifact.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> dbt Cloud persists the <code>manifest.json</code> from the last successful production run. Slim CI compares your PR's new manifest against this saved production manifest to identify changes (<code>state:modified</code>) and find the database locations of unchanged upstream models for deferral.</small></p>
+                                    </div>
+                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 4</h5>
+                                        <p class="card-text fs-5">How can you get an alert that your raw data is late, *before* the 6 AM production job even starts?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Create a separate, dedicated job that only runs <code>dbt source freshness</code>.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> Schedule this "Source Freshness" job to run frequently (e.g., hourly) and configure alerts on it. If the source data is late and the freshness check fails, this job will alert you *before* your main production build runs, allowing proactive intervention.</small></p>
+                                    </div>
+                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title text-primary">Question 5</h5>
+                                        <p class="card-text fs-5">Why should you *always* use <code>dbt build</code> in your production job instead of just <code>dbt run</code>?</p>
+                                    </div>
+                                   <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Because <code>dbt build</code> is an <strong>atomic operation</strong> that includes tests.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> It guarantees that models are run, *and then* tests are run against those models. If any tests fail, the entire operation fails, preventing bad data from being served. <code>dbt run</code> alone builds models but doesn't validate them with tests, offering no guarantee of data quality.</small></p>
+                                    </div>
+                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 6</h5>
+                                        <p class="card-text fs-5">You need to programmatically check which specific models failed in the last run. Which artifact would you parse?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> The <code><strong>run_results.json</strong></code> artifact.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> This artifact is the "receipt" of the last run. Its <code>results</code> array contains an object for each node (model, test, etc.) that ran, including its <code>unique_id</code>, <code>status</code> ('success', 'error', 'skipped'), and any error messages.</small></p>
+                                    </div>
+                                   <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 7</h5>
+                                        <p class="card-text fs-5">You are migrating your production dbt project to target a new Snowflake schema ('PROD_NEW'). How can you test this *entire* deployment in isolation using dbt Cloud Jobs?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Create a new dbt Cloud **Environment** pointing to the 'PROD_NEW' schema and trigger a **Deployment Job** associated with that new environment.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> dbt Cloud Environments allow you to define distinct target credentials (database, schema, user). By creating a new environment for 'PROD_NEW' and running a full <code>dbt build</code> job against it, you can test the entire project build in the target schema without affecting your current 'PROD' environment.</small></p>
+                                    </div>
+                                   <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 8</h5>
+                                        <p class="card-text fs-5">A deployment failed. Logs show a `unique` test failed on `dim_customers` after an upstream source table unexpectedly loaded duplicate `customer_id`s. What's the fastest way to fix and deploy *only the necessary* changes?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> 
+                                            <ol>
+                                                <li>Fix the upstream source data issue (outside dbt).</li>
+                                                <li>Re-run the production job using the <code>state:failed</code> selector.</li>
+                                            </ol>
+                                        </p>
+<div class="code-block"><pre><code class="language-bash">dbt build --select state:failed --state ./target-prod</code></pre></div>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> Assuming the dbt code is correct, the issue is bad source data. Once the source is fixed, <code>state:failed</code> tells dbt to look at the <code>run_results.json</code> from the failed run and re-run only the specific tests/models that failed (like the `unique` test on `dim_customers`) and any models downstream of them. This avoids a full rebuild.</small></p>
+                                    </div>
+                                   <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 9</h5>
+                                        <p class="card-text fs-5">You're deploying a large refactor of your staging layer. How can you ensure *all* potentially affected downstream marts are rebuilt and tested, even if their direct code didn't change?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Use a **graph selector** targeting the modified staging models and their downstream dependents.</p>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># Example: If you changed stg_orders and stg_customers</span>
+dbt build --select +stg_orders +stg_customers </code></pre></div>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> The <code>+model_name</code> selector ensures that dbt runs the specified model *and everything downstream* that relies on it, directly or indirectly. By selecting all modified staging models this way, you guarantee that all potentially impacted intermediate and mart models are rebuilt and tested against the new staging logic.</small></p>
+                                    </div>
+                                   <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="flip-card-container">
+                    <div class="flip-card">
+                        <div class="flip-card-inner">
+                            <div class="flip-card-front card h-100 shadow-sm">
+                                <div class="card-body">
+                                    <div>
+                                        <h5 class="card-title text-primary">Question 10</h5>
+                                        <p class="card-text fs-5">You need to perform a one-time historical data load using slightly different logic (e.g., ignoring a date filter). How can you manage this using dbt Jobs without changing the main branch code?</p>
+                                    </div>
+                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                            <div class="flip-card-back card h-100 shadow-sm">
+                                <div class="card-body">
+                                     <div>
+                                        <h5 class="card-title">Answer</h5>
+                                        <p><strong>Correct Answer:</strong> Use **Jinja variables** controlled via the <code>--vars</code> CLI argument in a dedicated job.</p>
+                                        <hr>
+                                        <p><small><strong>Explanation:</strong> Modify your model code to include conditional logic based on a variable (e.g., <code>{% if var('is_historical_load', false) %} ... {% endif %}</code>). Then, create a *new, separate dbt Cloud Job* (or run manually) and pass the variable override in the command:</small></p>
+<div class="code-block"><pre><code class="language-bash">dbt build --select your_model --vars '{is_historical_load: true}'</code></pre></div>
+                                        <p><small>This allows you to execute different logic for the historical load without modifying the code used by your regular production job.</small></p>
+                                    </div>
+                                   <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div> <div class="navigation-buttons">
+                 <button id="prevBtn" class="btn btn-outline-secondary" disabled><i class="bi bi-arrow-left me-1"></i> Previous</button>
+                 <button id="nextBtn" class="btn btn-outline-primary">Next <i class="bi bi-arrow-right ms-1"></i></button>
+            </div>
+
+        </div> </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardArea = document.getElementById('quizCardArea');
+            const cards = cardArea.querySelectorAll('.flip-card-container');
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            const progressBar = document.getElementById('progress-bar');
+            const progressLabel = document.getElementById('progress-label');
+            
+            let currentQuestionIndex = 0;
+            const totalQuestions = cards.length; // Now correctly gets 10
+
+            function updateUI() {
+                // Show/Hide Cards
+                cards.forEach((card, index) => {
+                    if (index === currentQuestionIndex) {
+                        card.classList.add('active');
+                        // Ensure card is flipped back when navigating
+                        card.querySelector('.flip-card').classList.remove('flipped'); 
+                    } else {
+                        card.classList.remove('active');
+                    }
+                });
+
+                // Update Progress Bar
+                const progressPercentage = ((currentQuestionIndex + 1) / totalQuestions) * 100;
+                progressBar.style.width = `${progressPercentage}%`;
+                progressBar.setAttribute('aria-valuenow', progressPercentage);
+                progressLabel.textContent = `Question ${currentQuestionIndex + 1} of ${totalQuestions}`; // Updated label
+
+                // Update Button States
+                prevBtn.disabled = currentQuestionIndex === 0;
+                nextBtn.disabled = currentQuestionIndex === totalQuestions - 1;
+            }
+
+            // Flip Card Logic
+            cardArea.addEventListener('click', function(event) {
+                const button = event.target.closest('.flip-btn');
+                if (button) {
+                    const flipCard = button.closest('.flip-card');
+                    if (flipCard) {
+                        flipCard.classList.toggle('flipped');
+                    }
+                }
+            });
+
+            // Navigation Logic
+            nextBtn.addEventListener('click', function() {
+                if (currentQuestionIndex < totalQuestions - 1) {
+                    currentQuestionIndex++;
+                    updateUI();
+                }
+            });
+
+            prevBtn.addEventListener('click', function() {
+                if (currentQuestionIndex > 0) {
+                    currentQuestionIndex--;
+                    updateUI();
+                }
+            });
+
+            // Initial UI setup
+            updateUI();
+        });
+    </script>
+</body>
+</html>

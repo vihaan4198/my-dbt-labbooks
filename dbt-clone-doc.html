@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Docs & Clone Demo</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+            --bs-success-light: #e6f7f0;
+            --bs-warning-light: #fffbeb;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+        .highlight {
+            background-color: #fff3cd; /* Light yellow, adjust as needed */
+            padding: 0.1em 0.3em;
+            border-radius: 3px;
+        }
+
+        .hero-header-product {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Main Tabs Styling */
+        .main-nav-tabs .nav-link {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: var(--bs-secondary);
+            border-bottom-width: 3px;
+        }
+        .main-nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+        }
+         .main-tab-content {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+
+        /* Sub-Tabs Styling */
+        .sub-nav-tabs .nav-link {
+            color: var(--bs-secondary);
+            font-weight: 500;
+             border-bottom-width: 2px;
+        }
+        .sub-nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+        }
+        .sub-tab-content {
+            /* No border needed for sub-tabs, inherit background */
+            padding: 2rem 0 0 0; /* Add padding top */
+        }
+
+
+        /* Accordion Styling */
+        .accordion-button {
+            font-weight: 500;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bs-primary-light);
+            color: var(--bs-primary);
+            box-shadow: none;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: var(--bs-dark-purple);
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .code-block .comment { color: #9a9a9a; }
+        
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+        
+        /* Feature icons */
+        .feature-icon-box {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .feature-icon-box .bi {
+            font-size: 3rem;
+            color: var(--bs-primary);
+        }
+
+        /* DAG / Process Flow Simulation */
+         .flow-container, .dag-container {
+            padding: 1.5rem;
+            background-color: var(--bs-info-light);
+            border-radius: 0.5rem;
+            text-align: center;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .flow-node, .dag-node {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 2px solid;
+            margin: 0.5rem;
+            background-color: #fff; /* Default background */
+        }
+         .flow-node.command { border-color: var(--bs-secondary); color: var(--bs-secondary); }
+         .flow-node.artifact { border-color: var(--bs-dark-purple); color: var(--bs-dark-purple); }
+         .flow-node.result { border-color: #198754; color: #198754; } /* Green */
+         
+        .dag-node.source { background-color: var(--bs-success-light); border-color: #5cb85c; color: #3d7a3d; }
+        .dag-node.model { background-color: var(--bs-primary-light); border-color: var(--bs-primary); color: var(--bs-primary); }
+        .dag-node.exposure { background-color: var(--bs-warning-light); border-color: #f0ad4e; color: #8a6d3b; }
+        
+        .flow-arrow, .dag-arrow {
+            font-size: 2rem;
+            color: #888;
+            vertical-align: middle;
+            margin: 0 0.5rem;
+        }
+        
+         /* Custom Alert */
+        .alert-primary {
+            background-color: var(--bs-primary-light);
+            border-color: rgba(var(--bs-primary-rgb), 0.3);
+            color: var(--bs-primary);
+        }
+        .alert-primary .alert-heading {
+            color: inherit;
+        }
+        
+        /* Flip Card Styles (for Quiz) */
+        .flip-card {
+            background-color: transparent;
+            min-height: 300px;
+            border: none;
+            perspective: 1000px;
+        }
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+            min-height: 300px;
+        }
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .flip-card-front { background-color: #fff; color: black; }
+        .flip-card-back { background-color: var(--bs-primary-light); color: var(--bs-dark-purple); transform: rotateY(180deg); }
+        .flip-card-front .card-body, .flip-card-back .card-body { flex-grow: 1; display: flex; flex-direction: column; justify-content: space-between; }
+        .flip-card-back strong { color: var(--bs-primary); }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header-product text-center">
+                <h1 class="display-4">dbt Docs & dbt Clone</h1>
+                <p class="lead">Essential Tools for Understanding and Managing Your dbt Project</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            
+            <ul class="nav nav-tabs main-nav-tabs" id="mainTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="main-tab-docs" data-bs-toggle="tab" data-bs-target="#main-tab-docs-pane" type="button" role="tab" aria-controls="main-tab-docs-pane" aria-selected="true">
+                       <i class="bi bi-book me-1"></i> dbt Documentation
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="main-tab-clone" data-bs-toggle="tab" data-bs-target="#main-tab-clone-pane" type="button" role="tab" aria-controls="main-tab-clone-pane" aria-selected="false">
+                       <i class="bi bi-copy me-1"></i> dbt Clone
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content main-tab-content" id="mainTabsContent">
+                
+                <div class="tab-pane fade show active" id="main-tab-docs-pane" role="tabpanel" aria-labelledby="main-tab-docs" tabindex="0">
+                    
+                    <ul class="nav nav-tabs sub-nav-tabs" id="docSubTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="subtab-docs-what" data-bs-toggle="tab" data-bs-target="#subtab-docs-what-pane" type="button" role="tab" aria-selected="true">
+                                <i class="bi bi-info-circle me-1"></i> What is dbt Docs?
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-docs-included" data-bs-toggle="tab" data-bs-target="#subtab-docs-included-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-diagram-3-fill me-1"></i> What's Included?
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-docs-generate" data-bs-toggle="tab" data-bs-target="#subtab-docs-generate-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-gear-fill me-1"></i> Generation & Serving
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-docs-best" data-bs-toggle="tab" data-bs-target="#subtab-docs-best-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-check2-circle me-1"></i> Best Practices
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content sub-tab-content" id="docSubTabsContent">
+                        
+                        <div class="tab-pane fade show active" id="subtab-docs-what-pane" role="tabpanel" tabindex="0">
+                            <h3 class="mb-3">What is dbt Documentation?</h3>
+                            <p class="lead">dbt Docs is an <span class="highlight">automatically generated, web-based documentation site</span> specifically for your dbt project. Think of it as a central, interactive hub combining your code, metadata, lineage, and test results all in one place.</p>
+                            <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Key Features & Benefits</h4>
+                            <div class="row">
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-magic"></i>
+                                    <h5 class="mt-2">Auto-Generated</h5>
+                                    <p class="text-muted">Generated directly from your dbt project code and configuration files, minimizing manual effort.</p>
+                                </div>
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-compass"></i>
+                                    <h5 class="mt-2">Interactive UI</h5>
+                                    <p class="text-muted">Easy to navigate, search, and explore your project's components.</p>
+                                </div>
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-share-fill"></i>
+                                    <h5 class="mt-2">Data Lineage Graph (DAG)</h5>
+                                    <p class="text-muted">Visually understand dependencies between sources, models, and exposures.</p>
+                                </div>
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-card-text"></i>
+                                    <h5 class="mt-2">Column-Level Details</h5>
+                                    <p class="text-muted">Document data types, descriptions, business rules, and applied tests for each column.</p>
+                                </div>
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-clipboard2-check"></i>
+                                    <h5 class="mt-2">Test Results</h5>
+                                    <p class="text-muted">See which data quality tests are passing or failing directly within the documentation.</p>
+                                </div>
+                                <div class="col-md-4 feature-icon-box">
+                                    <i class="bi bi-git"></i>
+                                    <h5 class="mt-2">Version Controlled</h5>
+                                    <p class="text-muted">The documentation configuration lives alongside your dbt code in Git, ensuring consistency.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="subtab-docs-included-pane" role="tabpanel" tabindex="0">
+                            <h3 class="mb-3">What Information Does dbt Docs Include?</h3>
+                            <p class="lead">dbt Docs pulls information directly from your project files, creating a comprehensive picture of your data transformations.</p>
+
+                            <div class="accordion" id="includedAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#inc-1" aria-expanded="true" aria-controls="inc-1">
+                                            <i class="bi bi-file-earmark-code me-2"></i><strong>Models</strong> (.sql files)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-1" class="accordion-collapse collapse show" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li><strong>Description:</strong> From the <code>description</code> field in your model's <code>.yml</code> file.</li>
+                                                <li><strong>Columns:</strong> Includes <code>name</code>, <code>description</code>, defined <code>tests</code>, and <code>meta</code> tags from the <code>.yml</code> file.</li>
+                                                <li><strong>Configuration:</strong> Shows settings from the <code>config()</code> block within the <code>.sql</code> file (e.g., materialization).</li>
+                                                <li><strong>Compiled Code:</strong> Displays the actual SQL that dbt runs against your warehouse.</li>
+                                                <li><strong>Dependencies:</strong> Lists upstream (<code>ref</code>, <code>source</code>) and downstream models.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inc-2" aria-expanded="false" aria-controls="inc-2">
+                                            <i class="bi bi-database me-2"></i><strong>Sources</strong> (.yml files)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-2" class="accordion-collapse collapse" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li><strong>Source Description:</strong> Overall description for a group of raw tables.</li>
+                                                <li><strong>Table Description:</strong> Specific description for each raw table defined.</li>
+                                                <li><strong>Columns:</strong> Includes <code>name</code> and <code>description</code> for source columns.</li>
+                                                <li><strong>Freshness:</strong> If configured, shows the source freshness status.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                 <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inc-3" aria-expanded="false" aria-controls="inc-3">
+                                            <i class="bi bi-clipboard2-check me-2"></i><strong>Tests</strong> (.yml files or custom tests)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-3" class="accordion-collapse collapse" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li>Shows all defined tests (standard generic tests like <code>not_null</code>, <code>unique</code>, <code>relationships</code>, <code>accepted_values</code>, and custom schema tests).</li>
+                                                <li>Integrates with <code>run_results.json</code> to display the pass/fail status of the last test run.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inc-4" aria-expanded="false" aria-controls="inc-4">
+                                            <i class="bi bi-tools me-2"></i><strong>Macros</strong> (.sql files in macros/)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-4" class="accordion-collapse collapse" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li><strong>Description:</strong> From the <code>description</code> field in <code>macros/schema.yml</code>.</li>
+                                                <li><strong>Arguments:</strong> Includes descriptions for macro parameters, also defined in <code>macros/schema.yml</code>.</li>
+                                                <li><strong>Code:</strong> Displays the Jinja/SQL code of the macro itself.</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inc-5" aria-expanded="false" aria-controls="inc-5">
+                                            <i class="bi bi-graph-up-arrow me-2"></i><strong>Exposures</strong> (.yml files)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-5" class="accordion-collapse collapse" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            Defines downstream consumers of your dbt models:
+                                            <ul>
+                                                <li>Includes <code>name</code>, <code>description</code>, <code>owner</code>, <code>type</code> (e.g., dashboard, ML model), <code>url</code>, and <code>depends_on</code> (linking back to the dbt models used).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#inc-6" aria-expanded="false" aria-controls="inc-6">
+                                            <i class="bi bi-calculator me-2"></i><strong>Metrics</strong> (.yml files)
+                                        </button>
+                                    </h2>
+                                    <div id="inc-6" class="accordion-collapse collapse" data-bs-parent="#includedAccordion">
+                                        <div class="accordion-body">
+                                            Defines key business metrics:
+                                            <ul>
+                                                <li>Includes <code>name</code>, <code>description</code>, the underlying <code>model</code>, <code>calculation_method</code> (e.g., sum, average), and the <code>expression</code> (column name).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                             <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Visualizing Lineage (DAG)</h4>
+                             <p>One of the most powerful features is the interactive DAG view, showing how everything connects:</p>
+                             <div class="dag-container">
+                                <div class="dag-node source"><i class="bi bi-database me-2"></i>Source</div>
+                                <span class="dag-arrow"><i class="bi bi-arrow-right"></i></span>
+                                <div class="dag-node model"><i class="bi bi-file-earmark-code me-2"></i>Model</div>
+                                 <span class="dag-arrow"><i class="bi bi-arrow-right"></i></span>
+                                <div class="dag-node exposure"><i class="bi bi-clipboard-data me-2"></i>Exposure</div>
+                            </div>
+                        </div>
+
+                         <div class="tab-pane fade" id="subtab-docs-generate-pane" role="tabpanel" tabindex="0">
+                            <h3 class="mb-3">Generating and Serving dbt Docs</h3>
+                            <p class="lead">Creating and viewing your documentation is a simple two-step process using dbt commands.</p>
+
+                            <div class="row mt-4">
+                                <div class="col-md-6 mb-3">
+                                     <div class="card h-100">
+                                        <div class="card-header h5 bg-secondary text-white">
+                                            <i class="bi bi-gear me-1"></i> Step 1: Generate Artifacts
+                                        </div>
+                                        <div class="card-body">
+                                            <p>The first command compiles your project metadata into JSON files.</p>
+        <div class="code-block"><pre><code class="language-bash">dbt docs generate</code></pre></div>
+                                            <p><strong>What it does:</strong></p>
+                                            <ul>
+                                                <li>Parses all your <code>.sql</code> and <code>.yml</code> files.</li>
+                                                <li>Creates two crucial files in your <code>target/</code> directory:
+                                                    <ul>
+                                                        <li><code><strong>manifest.json</strong></code>: The "brain" - contains the full graph, code, dependencies, and metadata from your project files. This is essential for the docs.</li>
+                                                        <li><code><strong>catalog.json</strong></code>: The "body" - contains metadata pulled from your *data warehouse* about tables and columns (like data types). Requires a <code>dbt run</code> first for accuracy.</li>
+                                                    </ul>
+                                                </li>
+                                            </ul>
+                                        </div>
+                                     </div>
+                                </div>
+                                <div class="col-md-6 mb-3">
+                                    <div class="card h-100">
+                                        <div class="card-header h5 bg-primary text-white">
+                                            <i class="bi bi-display me-1"></i> Step 2: Serve the Website
+                                        </div>
+                                        <div class="card-body">
+                                             <p>The second command starts a local web server to view the docs.</p>
+        <div class="code-block"><pre><code class="language-bash">dbt docs serve</code></pre></div>
+                                            <p><strong>What it does:</strong></p>
+                                            <ul>
+                                                <li>Uses the <code>manifest.json</code> and <code>catalog.json</code> files generated in step 1.</li>
+                                                <li>Launches a local web server (usually at <code>http://localhost:8080</code>).</li>
+                                                <li>Hosts the interactive documentation website for you to browse.</li>
+                                                <li>Keeps running until you stop it (Ctrl+C in your terminal).</li>
+                                            </ul>
+                                            <div class="alert alert-info mt-3">
+                                                <strong>Tip:</strong> In dbt Cloud, documentation is automatically hosted for you after successful job runs!
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                             <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">The Docs Generation Flow</h4>
+                             <p>This flow diagram illustrates the process:</p>
+                             <div class="flow-container">
+                                <div class="flow-node command"><i class="bi bi-terminal me-2"></i>dbt docs generate</div>
+                                <span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>
+                                <div>
+                                    <div class="flow-node artifact mb-2"><i class="bi bi-file-earmark-text me-2"></i>manifest.json</div>
+                                    <div class="flow-node artifact"><i class="bi bi-journal-album me-2"></i>catalog.json</div>
+                                </div>
+                                <span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>
+                                <div class="flow-node command"><i class="bi bi-pc-display-horizontal me-2"></i>dbt docs serve</div>
+                                <span class="flow-arrow"><i class="bi bi-arrow-right"></i></span>
+                                <div class="flow-node result"><i class="bi bi-globe me-2"></i>Website</div>
+                            </div>
+                             <div class="alert alert-primary mt-4" role="alert">
+                              <h4 class="alert-heading"><i class="bi bi-lightbulb-fill me-2"></i>Key Takeaway</h4>
+                              <p><code>dbt docs generate</code> creates the data files (manifest, catalog), and <code>dbt docs serve</code> uses those files to show you the website.</p>
+                            </div>
+                        </div>
+
+                        <div class="tab-pane fade" id="subtab-docs-best-pane" role="tabpanel" tabindex="0">
+                            <h3 class="mb-3">dbt Documentation Best Practices</h3>
+                            <p class="lead">Good documentation is crucial for team collaboration and understanding. Here's how to make your dbt Docs effective:</p>
+                            
+                            <ul class="list-group">
+                                <li class="list-group-item">
+                                    <i class="bi bi-pencil-square me-2 text-primary"></i><strong>Write Clear Descriptions:</strong> Add meaningful <code>description</code> fields to all models, sources, columns, macros, exposures, and metrics in your <code>.yml</code> files. Explain the purpose, business logic, and potential caveats.
+                                </li>
+                                 <li class="list-group-item">
+                                    <i class="bi bi-tags-fill me-2 text-primary"></i><strong>Document Columns Thoroughly:</strong> For each important column, describe what it represents, its data type (though `catalog.json` helps here), and any specific business rules or calculations involved.
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-database-check me-2 text-primary"></i><strong>Leverage Tests as Documentation:</strong> Use tests (<code>not_null</code>, <code>unique</code>, <code>accepted_values</code>, <code>relationships</code>) not just for quality but also to implicitly document assumptions about your data. The docs site will show these tests.
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-diagram-3 me-2 text-primary"></i><strong>Define Sources Clearly:</strong> Document your raw data sources, including who owns them and how often they update (use <code>freshness</code> checks where possible).
+                                </li>
+                                 <li class="list-group-item">
+                                    <i class="bi bi-graph-up-arrow me-2 text-primary"></i><strong>Map Downstream Use with Exposures:</strong> Define exposures to show which dashboards, applications, or ML models consume your dbt models. This completes the lineage picture.
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-arrow-clockwise me-2 text-primary"></i><strong>Keep Docs Updated:</strong> Make updating documentation part of your development workflow. When you change a model, update its description and column info in the same PR.
+                                </li>
+                                <li class="list-group-item">
+                                    <i class="bi bi-cloud-arrow-up me-2 text-primary"></i><strong>Generate Docs Regularly:</strong> Integrate <code>dbt docs generate</code> into your CI/CD pipeline (<code>dbt build</code> does this) so the hosted documentation (especially in dbt Cloud) always reflects the latest production code.
+                                </li>
+                            </ul>
+                        </div>
+                    </div> </div> <div class="tab-pane fade" id="main-tab-clone-pane" role="tabpanel" aria-labelledby="main-tab-clone" tabindex="0">
+
+                    <ul class="nav nav-tabs sub-nav-tabs" id="cloneSubTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="subtab-clone-what" data-bs-toggle="tab" data-bs-target="#subtab-clone-what-pane" type="button" role="tab" aria-selected="true">
+                                <i class="bi bi-info-circle me-1"></i> What is dbt Clone?
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-clone-use" data-bs-toggle="tab" data-bs-target="#subtab-clone-use-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-lightbulb me-1"></i> Use Cases
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-clone-limits" data-bs-toggle="tab" data-bs-target="#subtab-clone-limits-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-cone-striped me-1"></i> Limitations & Best Practices
+                            </button>
+                        </li>
+                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="subtab-clone-quiz" data-bs-toggle="tab" data-bs-target="#subtab-clone-quiz-pane" type="button" role="tab" aria-selected="false">
+                                <i class="bi bi-question-circle me-1"></i> Quiz
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content sub-tab-content" id="cloneSubTabsContent">
+                        
+                        <div class="tab-pane fade show active" id="subtab-clone-what-pane" role="tabpanel" tabindex="0">
+                             <h3 class="mb-3">What is dbt Clone?</h3>
+                            <p class="lead"><code>dbt clone</code> is a command that allows you to <span class="highlight">efficiently copy dbt-managed data assets</span> (models, seeds, snapshots) from one schema/database to another within the *same* data platform.</p>
+                            
+                             <div class="alert alert-warning mt-3">
+                                <strong>Important:</strong> <code>dbt clone</code> copies the *compiled data and structure* (tables/views), not your dbt project files (<code>.sql</code>, <code>.yml</code>).
+                            </div>
+
+                            <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Basic Syntax</h4>
+        <div class="code-block"><pre><code class="language-bash">dbt clone --target &lt;your_profile_target&gt; --schema &lt;new_destination_schema&gt; --from &lt;source_schema_or_db.schema&gt;</code></pre></div>
+                            <ul>
+                                <li><code>--target</code>: Specifies which dbt profile target to use for connection details.</li>
+                                <li><code>--schema</code>: The <span class="highlight">new schema</span> where the copied objects will be created.</li>
+                                <li><code>--from</code>: The <span class="highlight">existing schema</span> containing the dbt objects you want to copy.</li>
+                            </ul>
+                            
+                            <h5 class="mt-3">Example:</h5>
+                            <p>Copying production analytics data into your personal sandbox:</p>
+        <div class="code-block"><pre><code class="language-bash"><span class="comment"># Using target 'dev_user', copy from 'analytics_prod' schema into 'my_personal_sandbox' schema</span>
+dbt clone --target dev_user --schema my_personal_sandbox --from analytics_prod
+        </code></pre></div>
+
+                            <p class="mt-4">The efficiency often depends on your data platform. Platforms like Snowflake leverage <span class="highlight"> zero-copy cloning</span> (fast, no extra storage cost), while others like BigQuery perform actual data copies.</p>
+                        </div>
+
+                         <div class="tab-pane fade" id="subtab-clone-use-pane" role="tabpanel" tabindex="0">
+                             <h3 class="mb-3">Why Use dbt Clone? Key Use Cases</h3>
+                            <p class="lead"><code>dbt clone</code> enables faster, safer, and more isolated workflows for data teams.</p>
+                            
+                             <div class="row mt-4">
+                                <div class="col-md-6 feature-icon-box">
+                                    <i class="bi bi-person-bounding-box"></i>
+                                    <h5 class="mt-2">1. Rapid Development Sandboxes</h5>
+                                    <p class="text-muted">Clone the main development schema to your personal schema to work in isolation without conflicting with teammates. Avoids shared schema conflicts.</p>
+                                </div>
+                                <div class="col-md-6 feature-icon-box">
+                                    <i class="bi bi-shield-check"></i>
+                                    <h5 class="mt-2">2. Isolated Testing Environments (CI/CD)</h5>
+                                    <p class="text-muted">Clone staging/production into a temporary schema for each PR. Provides a clean, consistent dataset for reliable automated testing, avoiding flaky tests from concurrent changes.</p>
+                                </div>
+                                <div class="col-md-6 feature-icon-box">
+                                    <i class="bi bi-bug-fill"></i>
+                                    <h5 class="mt-2">3. Reproducing Production Issues</h5>
+                                    <p class="text-muted">Safely clone the production schema into a debugging schema to investigate bugs without impacting live data.</p>
+                                </div>
+                                <div class="col-md-6 feature-icon-box">
+                                    <i class="bi bi-clipboard-data"></i>
+                                    <h5 class="mt-2">4. Ad-hoc Analysis & ML Experiments</h5>
+                                    <p class="text-muted">Clone a schema to run heavy analytical queries or train ML models without impacting operational performance. Drop the schema when done.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="tab-pane fade" id="subtab-clone-limits-pane" role="tabpanel" tabindex="0">
+                             <h3 class="mb-3">Limitations & Best Practices</h3>
+                             <p class="lead">While powerful, <code>dbt clone</code> has some constraints and works best when used thoughtfully.</p>
+                            
+                            <div class="accordion mt-4" id="cloneLimitsAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#clone-lim-1" aria-expanded="true" aria-controls="clone-lim-1">
+                                            <i class="bi bi-exclamation-triangle me-2"></i><strong>Key Limitations</strong>
+                                        </button>
+                                    </h2>
+                                    <div id="clone-lim-1" class="accordion-collapse collapse show" data-bs-parent="#cloneLimitsAccordion">
+                                        <div class="accordion-body">
+                                            <ul>
+                                                <li><strong>Platform-Dependent Behavior:</strong> Speed and cost vary (zero-copy vs. data copy).</li>
+                                                <li><strong>Required Permissions:</strong> Needs <code>CREATE SCHEMA</code>, <code>SELECT</code> on source, <code>CREATE TABLE/VIEW</code> on destination.</li>
+                                                <li><strong>Snapshot, Not Live:</strong> A clone is a point-in-time copy and doesn't auto-update.</li>
+                                                <li><strong>Only Clones dbt Objects:</strong> Doesn't copy non-dbt managed objects (stored procedures, functions, external tables not defined via dbt).</li>
+                                            </ul>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#clone-lim-2" aria-expanded="false" aria-controls="clone-lim-2">
+                                            <i class="bi bi-check2-circle me-2"></i><strong>Best Practices</strong>
+                                        </button>
+                                    </h2>
+                                    <div id="clone-lim-2" class="accordion-collapse collapse" data-bs-parent="#cloneLimitsAccordion">
+                                        <div class="accordion-body">
+                                             <ul>
+                                                <li><strong>Automate Cleanup:</strong> Script schema dropping for temporary clones (CI, debug).</li>
+                                                <li><strong>Use Clear Naming Conventions:</strong> Make schema purpose obvious (e.g., <code>ci_pr_&lt;id&gt;</code>).</li>
+                                                <li><strong>Monitor Resources/Costs:</strong> Especially on platforms doing full data copies.</li>
+                                                <li><strong>Use Selectors for Partial Clones:</strong> Clone only needed parts of the DAG using <code>--select</code> or <code>--exclude</code>.</li>
+                                            </ul>
+                                            <p><strong>Example - Cloning only specific models:</strong></p>
+        <div class="code-block"><pre><code class="language-bash"><span class="comment"># Clone only dim_customers and its downstream models (+) from prod to my dev schema</span>
+dbt clone --select +dim_customers --from analytics_prod --schema my_dev
+        </code></pre></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="tab-pane fade" id="subtab-clone-quiz-pane" role="tabpanel" tabindex="0">
+                            <h3 class="mb-3">Knowledge Check: dbt Clone</h3>
+                             <p class="lead">Test your understanding with these scenarios.</p>
+
+                            <div class="row mt-4" id="cloneQuizContainer">
+                                <div class="col-md-6 mb-4">
+                                    <div class="flip-card">
+                                        <div class="flip-card-inner">
+                                            <div class="flip-card-front card h-100 shadow-sm">
+                                                <div class="card-body">
+                                                    <div>
+                                                        <h5 class="card-title text-primary">Question 1</h5>
+                                                        <p class="card-text">A data engineer wants to quickly set up a temporary, isolated environment on Snowflake to test a new dbt model against a full copy of the production schema (`production_database.production_schema`). Which command is most appropriate?</p>
+                                                    </div>
+                                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="flip-card-back card h-100 shadow-sm">
+                                                <div class="card-body">
+                                                    <div>
+                                                        <h5 class="card-title">Answer</h5>
+                                                        <p><strong>Correct Answer: B</strong></p>
+        <div class="code-block"><pre><code>dbt clone --target my_dev_profile --schema my_temp_test_schema --from production_database.production_schema</code></pre></div>
+                                                        <hr>
+                                                        <p><small><strong>Explanation:</strong> This correctly uses <code>dbt clone</code>, specifies the user's target profile (`--target`), the new schema (`--schema`), and the fully qualified source schema (`--from`). Option A is missing arguments. Option C builds, not clones. Option D runs seeds/models.</small></p>
+                                                    </div>
+                                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="col-md-6 mb-4">
+                                     <div class="flip-card">
+                                        <div class="flip-card-inner">
+                                            <div class="flip-card-front card h-100 shadow-sm">
+                                                <div class="card-body">
+                                                    <div>
+                                                        <h5 class="card-title text-primary">Question 2</h5>
+                                                        <p class="card-text">Your project includes dbt models, a seed file, a source pointing to an external table `raw_events_stream`, and a database function `calculate_tax`. What gets copied by `dbt clone`?</p>
+                                                    </div>
+                                                    <button class="btn btn-primary mt-3 flip-btn">Flip to Answer <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                                </div>
+                                            </div>
+                                            <div class="flip-card-back card h-100 shadow-sm">
+                                                <div class="card-body">
+                                                    <div>
+                                                        <h5 class="card-title">Answer</h5>
+                                                        <p><strong>Correct Answer: B</strong></p>
+                                                        <p>Only the dbt models (tables and views) and the regions seed data.</p>
+                                                        <hr>
+                                                        <p><small><strong>Explanation:</strong> `dbt clone` only copies objects <span class="highlight"> managed by dbt</span> (models, seeds, snapshots). It does <span class="highlight"> not </span> copy external tables (even if defined as sources) or other database objects like functions/procedures not managed by dbt.</small></p>
+                                                    </div>
+                                                    <button class="btn btn-secondary mt-3 flip-btn">Flip Back <i class="bi bi-arrow-repeat ms-1"></i></button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div> </div> </div> </div> </div> </div> </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Use querySelectorAll to handle potential multiple quiz containers if needed
+            const quizContainers = document.querySelectorAll('#cloneQuizContainer'); 
+            
+            quizContainers.forEach(container => {
+                container.addEventListener('click', function(event) {
+                    const button = event.target.closest('.flip-btn');
+                    if (button) {
+                        const flipCard = button.closest('.flip-card');
+                        if (flipCard) {
+                            flipCard.classList.toggle('flipped');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

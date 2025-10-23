@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt E-commerce Analytics Lab Guide</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+        }
+
+        .hero-header {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Tabs Styling */
+        .nav-tabs .nav-link {
+            color: var(--bs-secondary);
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+            border-bottom-width: 3px;
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+        /* Accordion Styling */
+        .accordion-button {
+            font-weight: 500;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bs-primary-light);
+            color: var(--bs-primary);
+            box-shadow: none;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: var(--bs-dark-purple);
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .code-block .comment {
+            color: #9a9a9a;
+        }
+        .code-block .yaml-key {
+            color: #66d9ef; /* Light Blue */
+        }
+        .code-block .yaml-string {
+            color: #e6db74; /* Yellow */
+        }
+        .code-block .sql-keyword {
+            color: #f92672; /* Pink/Red */
+        }
+        .code-block .sql-function {
+            color: #a6e22e; /* Green */
+        }
+
+        /* Custom Alert */
+        .alert-primary {
+            background-color: var(--bs-primary-light);
+            border-color: rgba(var(--bs-primary-rgb), 0.3);
+            color: var(--bs-primary);
+        }
+        .alert-primary .alert-heading {
+            color: inherit;
+        }
+        
+        .explanation {
+            background-color: #fdfdff;
+            border-left: 4px solid var(--bs-secondary);
+            padding: 1rem;
+            margin-top: 1rem;
+            border-radius: 0.25rem;
+        }
+        
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header text-center">
+                <h1 class="display-4">Comprehensive dbt Project Lab</h1>
+                <p class="lead">A Hands-On Guide to E-Commerce Data Transformation</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            
+            <h2 class="mb-3"><i class="bi bi-bullseye" style="color: var(--bs-primary);"></i> Project Overview</h2>
+            
+            <div class="alert alert-primary" role="alert">
+                <h4 class="alert-heading">Project Goal</h4>
+                <p>Transform raw e-commerce data (customers, orders, payments) into a clean, aggregated format for analytics and reporting.</p>
+            </div>
+
+            <div class="accordion mb-4" id="featuresAccordion">
+                <div class="accordion-item">
+                    <h2 class="accordion-header">
+                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#features-collapse" aria-expanded="false" aria-controls="features-collapse">
+                            <i class="bi bi-card-checklist me-2"></i><strong>Features Covered in this Lab</strong>
+                        </button>
+                    </h2>
+                    <div id="features-collapse" class="accordion-collapse collapse" data-bs-parent="#featuresAccordion">
+                        <div class="accordion-body">
+                            <ul class="list-group list-group-flush">
+                                <li class="list-group-item"><strong>Project Configuration (dbt_project.yml):</strong> Profile config, vars, materializations, schemas, tags, hooks.</li>
+                                <li class="list-group-item"><strong>Packages (packages.yml):</strong> Integration of dbt_utils and dbt_expectations.</li>
+                                <li class="list-group-item"><strong>Seeds (data/):</strong> Loading static data (e.g., `product_categories.csv`).</li>
+                                <li class="list-group-item"><strong>Macros (macros/):</strong> Utility macros and custom generic tests.</li>
+                                <li class="list-group-item"><strong>Sources (models/sources.yml):</strong> Defining raw tables, descriptions, and freshness checks.</li>
+                                <li class="list-group-item"><strong>Multi-Layered Models:</strong>
+                                    <ul>
+                                        <li><strong>Staging:</strong> Light transformations, renaming, source referencing.</li>
+                                        <li><strong>Intermediate:</strong> Joins, complex logic, ephemeral materialization.</li>
+                                        <li><strong>Marts:</strong> Final dimension/fact tables, advanced tests, tags.</li>
+                                    </ul>
+                                </li>
+                                <li class="list-group-item"><strong>Exposures (models/exposures.yml):</strong> Documenting dashboards and ML models.</li>
+                                <li class="list-group-item"><strong>Metrics (models/metrics.yml):</strong> Defining business metrics within dbt.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+
+            <ul class="nav nav-tabs" id="labTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="setup-tab" data-bs-toggle="tab" data-bs-target="#setup-tab-pane" type="button" role="tab" aria-controls="setup-tab-pane" aria-selected="true">
+                        <i class="bi bi-tools me-1"></i> 1. Setup & Execution
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="files-tab" data-bs-toggle="tab" data-bs-target="#files-tab-pane" type="button" role="tab" aria-controls="files-tab-pane" aria-selected="false">
+                        <i class="bi bi-files me-1"></i> 2. Project Files & Code
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="labTabsContent">
+                
+                <div class="tab-pane fade show active" id="setup-tab-pane" role="tabpanel" aria-labelledby="setup-tab" tabindex="0">
+                    <h3 class="mb-3">Project Setup Instructions</h3>
+                    <p>Follow these steps to set up the dbt project and run it. (We recommend using dbt Core and Snowflake).</p>
+
+                    <div class="list-group">
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">1. Create Your Project Directory</h5>
+                                <span class="badge bg-primary rounded-pill">Step 1</span>
+                            </div>
+                            <p class="mb-1">Create an empty folder on your system (e.g., <code>ecom_analytics</code>). This will be your dbt project root.</p>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">2. Create Files and Paste Code</h5>
+                                <span class="badge bg-primary rounded-pill">Step 2</span>
+                            </div>
+                            <p class="mb-1">Inside <code>ecom_analytics/</code>, create the exact directory structure and files shown in the <strong>"Project Files & Code"</strong> tab.</p>
+                            <p class="mb-1">Copy and paste the code provided for each file into its corresponding location.</p>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">3. Prepare Your Data Warehouse</h5>
+                                <span class="badge bg-primary rounded-pill">Step 3</span>
+                            </div>
+                            <p class="mb-1">Create the dummy raw tables in your data warehouse that match the <code>sources.yml</code> definitions.</p>
+                            <div class="alert alert-warning mt-2">
+                                <strong>Crucially:</strong> Replace <code>your_database.your_schema</code> with your actual database and schema names in all SQL statements. This must match your <code>sources.yml</code> file.
+                            </div>
+                            
+                            <div class="accordion accordion-flush mt-3" id="sqlAccordion">
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sql-1" aria-expanded="false" aria-controls="sql-1">
+                                            <i class="bi bi-person-lines-fill me-2"></i> DDL & Sample Data for <code>raw_customers</code>
+                                        </button>
+                                    </h2>
+                                    <div id="sql-1" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- DDL for raw_customers</span> 
+<span class="sql-keyword">CREATE OR REPLACE TABLE</span> your_database.your_schema.raw_customers (
+    customer_id <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">PRIMARY KEY</span>, 
+    first_name <span class="sql-keyword">VARCHAR</span>(100), 
+    last_name <span class="sql-keyword">VARCHAR</span>(100), 
+    email <span class="sql-keyword">VARCHAR</span>(100), 
+    registration_date <span class="sql-keyword">DATE</span>, 
+    updated_at <span class="sql-keyword">TIMESTAMP_NTZ</span> 
+);
+
+<span class="comment">-- Sample Data for raw_customers</span> 
+<span class="sql-keyword">INSERT INTO</span> your_database.your_schema.raw_customers (customer_id, first_name, last_name, email, registration_date, updated_at) <span class="sql-keyword">VALUES</span> 
+('cust_001', 'Alice', 'Smith', 'alice@example.com', '2023-01-15', '2023-01-15 10:00:00'),
+('cust_002', 'Bob', 'Johnson', 'bob@example.com', '2023-02-20', '2023-02-20 11:30:00'),
+('cust_003', 'Charlie', 'Brown', 'charlie@example.com', '2023-03-01', '2023-03-01 14:00:00'); 
+</code></pre></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sql-2" aria-expanded="false" aria-controls="sql-2">
+                                            <i class="bi bi-cart3 me-2"></i> DDL & Sample Data for <code>raw_orders</code>
+                                        </button>
+                                    </h2>
+                                    <div id="sql-2" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- DDL for raw_orders</span> 
+<span class="sql-keyword">CREATE OR REPLACE TABLE</span> your_database.your_schema.raw_orders (
+    order_id <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">PRIMARY KEY</span>, 
+    customer_id <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">NOT NULL</span>, 
+    order_date <span class="sql-keyword">DATE NOT NULL</span>, 
+    order_status <span class="sql-keyword">VARCHAR</span>(50), 
+    amount <span class="sql-keyword">NUMERIC</span>(10, 2) 
+);
+
+<span class="comment">-- Sample Data for raw_orders</span> 
+<span class="sql-keyword">INSERT INTO</span> your_database.your_schema.raw_orders (order_id, customer_id, order_date, order_status, amount) <span class="sql-keyword">VALUES</span> 
+('ord_101', 'cust_001', '2023-01-16', 'completed', 75.00), 
+('ord_102', 'cust_001', '2023-03-01', 'pending', 120.00), 
+('ord_103', 'cust_002', '2023-02-25', 'completed', 50.00), 
+('ord_104', 'cust_003', '2023-03-05', 'completed', 200.00); 
+</code></pre></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="accordion-item">
+                                    <h2 class="accordion-header">
+                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#sql-3" aria-expanded="false" aria-controls="sql-3">
+                                            <i class="bi bi-credit-card me-2"></i> DDL & Sample Data for <code>raw_payments</code>
+                                        </button>
+                                    </h2>
+                                    <div id="sql-3" class="accordion-collapse collapse" data-bs-parent="#sqlAccordion">
+                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- DDL for raw_payments</span> 
+<span class="sql-keyword">CREATE OR REPLACE TABLE</span> your_database.your_schema.raw_payments (
+    payment_id <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">PRIMARY KEY</span>, 
+    order_id <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">NOT NULL</span>, 
+    payment_method <span class="sql-keyword">VARCHAR</span>(50) <span class="sql-keyword">NOT NULL</span>, 
+    amount <span class="sql-keyword">NUMERIC</span> (10, 2) <span class="sql-keyword">NOT NULL</span>, 
+    payment_date <span class="sql-keyword">DATE NOT NULL</span>, 
+    status <span class="sql-keyword">VARCHAR</span>(20) 
+);
+
+<span class="comment">-- Sample Data for raw_payments</span> 
+<span class="sql-keyword">INSERT INTO</span> your_database.your_schema.raw_payments (payment_id, order_id, payment_method, amount, payment_date, status) <span class="sql-keyword">VALUES</span> 
+('pay_001', 'ord_101', 'credit_card', 50.00, '2023-01-16', 'completed'), 
+('pay_002', 'ord_101', 'bank_transfer', 25.00, '2023-01-16', 'completed'), 
+('pay_003', 'ord_102', 'credit_card', 70.00, '2023-03-01', 'pending'), 
+('pay_004', 'ord_102', 'gift_card', 50.00, '2023-03-01', 'pending'), 
+('pay_005', 'ord_103', 'bank_transfer', 50.00, '2023-02-25', 'completed'), 
+('pay_006', 'ord_104', 'credit_card', 150.00, '2023-03-05', 'completed'), 
+('pay_007', 'ord_104', 'gift_card', 50.00, '2023-03-05', 'completed'); 
+</code></pre></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">4. Configure <code>profiles.yml</code> (dbt Core Users)</h5>
+                                <span class="badge bg-primary rounded-pill">Step 4</span>
+                            </div>
+                            <p class="mb-1">If running dbt Core locally, set up your <code>~/.dbt/profiles.yml</code> file.</p>
+                            <p class="mb-1">Add a profile named <code>ecom_analytics</code> that points to your data warehouse:</p>
+                            <p class="mb-1"><small><strong>dbt Cloud Users:</strong> You can skip this, as your connection is set up in the dbt Cloud UI.</small></p>
+<div class="code-block"><pre><code class="language-yaml"><span class="comment"># ~/.dbt/profiles.yml</span> 
+<span class="yaml-key">ecom_analytics:</span> 
+  <span class="yaml-key">target:</span> <span class="yaml-string">dev</span> 
+  <span class="yaml-key">outputs:</span> 
+    <span class="yaml-key">dev:</span> 
+      <span class="yaml-key">type:</span> <span class="yaml-string">[your_warehouse_type_e.g._snowflake]</span> 
+      <span class="yaml-key">account:</span> <span class="yaml-string">[your_account_id]</span> 
+      <span class="yaml-key">user:</span> <span class="yaml-string">[your_user]</span> 
+      <span class="yaml-key">password:</span> <span class="yaml-string">[your_password]</span> 
+      <span class="yaml-key">role:</span> <span class="yaml-string">[your_role]</span> 
+      <span class="yaml-key">warehouse:</span> <span class="yaml-string">[your_warehouse]</span> 
+      <span class="yaml-key">database:</span> <span class="yaml-string">[your_database]</span> 
+      <span class="yaml-key">schema:</span> <span class="yaml-string">[your_dev_schema]</span> <span class="comment"># This should be a schema for development</span> 
+      <span class="yaml-key">threads:</span> <span class="yaml-string">4</span> 
+</code></pre></div>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">5. Run dbt Commands</h5>
+                                <span class="badge bg-primary rounded-pill">Step 5</span>
+                            </div>
+                            <p class="mb-1">Open your dbt Cloud IDE or local terminal navigated to the <code>ecom_analytics</code> directory.</p>
+                            <p class="mb-1">Run the following commands in sequence:</p>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># Install packages (dbt_utils, dbt_expectations)</span>
+<span class="sql-function">dbt</span> deps 
+
+<span class="comment"># Load static data (product_categories.csv)</span>
+<span class="sql-function">dbt</span> seed 
+
+<span class="comment"># Build all models, run tests, and generate docs</span>
+<span class="sql-function">dbt</span> build 
+
+<span class="comment"># Serve the documentation</span>
+<span class="sql-function">dbt</span> docs serve 
+</code></pre></div>
+                        </div>
+
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex w-100 justify-content-between">
+                                <h5 class="mb-1">6. Explore the Documentation</h5>
+                                <span class="badge bg-primary rounded-pill">Step 6</span>
+                            </div>
+                            <p class="mb-1">Open the URL provided by <code>dbt docs serve</code> in your browser (dbt Cloud will provide a link).</p>
+                            <p class="mb-1">Explore the DAG, model pages, source pages, metrics, and exposures. Pay attention to the descriptions, tests, and tags you've added.</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="files-tab-pane" role="tabpanel" aria-labelledby="files-tab" tabindex="0">
+                    <h3 class="mb-3">Project Files and Code</h3>
+                    <p>Create the following directory structure and files within your <code>ecom_analytics</code> root folder.</p>
+
+                    <div class="accordion" id="projectFilesAccordion">
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#file-1" aria-expanded="true" aria-controls="file-1">
+                                    <i class="bi bi-filetype-yml me-2"></i> <strong><code>dbt_project.yml</code></strong> (Project Root)
+                                </button>
+                            </h2>
+                            <div id="file-1" class="accordion-collapse collapse show" data-bs-parent="#projectFilesAccordion">
+                                <div class="accordion-body">
+<div class="code-block"><pre><code class="language-yaml"><span class="comment"># dbt_project.yml</span> 
+<span class="yaml-key">name:</span> <span class="yaml-string">'ecom_analytics'</span> 
+<span class="yaml-key">version:</span> <span class="yaml-string">'1.0.0'</span> 
+<span class="yaml-key">config-version:</span> <span class="yaml-string">2</span> 
+
+<span class="comment"># Profile name must match ~/.dbt/profiles.yml or dbt Cloud connection.</span> 
+<span class="yaml-key">profile:</span> <span class="yaml-string">'ecom_analytics'</span> 
+
+<span class="yaml-key">model-paths:</span> [<span class="yaml-string">"models"</span>] 
+<span class="yaml-key">seed-paths:</span> [<span class="yaml-string">"data"</span>] 
+<span class="yaml-key">snapshot-paths:</span> [<span class="yaml-string">"snapshots"</span>] 
+<span class="yaml-key">macro-paths:</span> [<span class="yaml-string">"macros"</span>] 
+<span class="yaml-key">test-paths:</span> [<span class="yaml-string">"tests"</span>] 
+<span class="yaml-key">analysis-paths:</span> [<span class="yaml-string">"analyses"</span>] 
+
+<span class="yaml-key">clean-targets:</span> <span class="comment"># directories to clean when 'dbt clean' is run</span> 
+  - <span class="yaml-string">"target"</span> 
+  - <span class="yaml-string">"dbt_packages"</span> 
+  - <span class="yaml-string">"logs"</span> 
+
+<span class="comment"># Define variables</span> 
+<span class="yaml-key">vars:</span> 
+  <span class="yaml-key">project_start_date:</span> <span class="yaml-string">'2023-01-01'</span> <span class="comment"># Used for filtering</span> 
+
+<span class="comment"># Configure models, materializations, schemas, and tags</span>
+<span class="yaml-key">models:</span> 
+  <span class="yaml-key">ecom_analytics:</span> 
+    <span class="comment"># Default materialization for all models in this project</span>
+    <span class="yaml-key">+materialized:</span> <span class="yaml-string">view</span> 
+    
+    <span class="yaml-key">staging:</span> 
+      <span class="comment"># Staging models are ephemeral by default</span> 
+      <span class="yaml-key">+materialized:</span> <span class="yaml-string">ephemeral</span> 
+      <span class="comment"># Group staging models into a dedicated schema</span>
+      <span class="yaml-key">+schema:</span> <span class="yaml-string">raw_stage</span> 
+      <span class="yaml-key">description:</span> <span class="yaml-string">"Staging layer for raw data, focusing on minimal cleaning and standardization."</span> 
+    
+    <span class="yaml-key">intermediate:</span> 
+      <span class="comment"># Intermediate models are ephemeral</span> 
+      <span class="yaml-key">+materialized:</span> <span class="yaml-string">ephemeral</span> 
+      <span class="yaml-key">+schema:</span> <span class="yaml-string">int_stage</span> 
+      <span class="yaml-key">description:</span> <span class="yaml-string">"Intermediate layer for joining and transforming staging data, not directly consumed by BI."</span> 
+    
+    <span class="yaml-key">marts:</span> 
+      <span class="comment"># Marts models are materialized as tables</span> 
+      <span class="yaml-key">+materialized:</span> <span class="yaml-string">table</span> 
+      <span class="yaml-key">+schema:</span> <span class="yaml-string">analytics</span> 
+      <span class="yaml-key">description:</span> <span class="yaml-string">"Marts layer for business-friendly, aggregated, and highly curated data for analytics."</span> 
+      <span class="yaml-key">+tags:</span> [<span class="yaml-string">'analytics_ready'</span>] 
+      
+      <span class="comment"># Specific configurations for individual marts models</span> 
+      <span class="yaml-key">fact_orders:</span> 
+        <span class="yaml-key">+tags:</span> [<span class="yaml-string">'daily_refresh'</span>, <span class="yaml-string">'sales'</span>] 
+        <span class="yaml-key">+docs:</span> 
+          <span class="yaml-key">node_color:</span> <span class="yaml-string">"#82a170"</span> 
+      <span class="yaml-key">dim_customers:</span> 
+        <span class="yaml-key">+tags:</span> [<span class="yaml-string">'daily_refresh'</span>, <span class="yaml-string">'customer'</span>] 
+        <span class="yaml-key">+docs:</span> 
+          <span class="yaml-key">node_color:</span> <span class="yaml-string">"#6b8e23"</span> 
+
+<span class="comment"># Define an on-run-end hook</span> 
+<span class="yaml-key">on-run-end:</span> 
+  - <span class="yaml-string">"{{ log('dbt run completed successfully for target.name environment at ' ~ run_started_at, info=True) }}"</span> 
+  - <span class="yaml-string">"{{ dbt_utils.log_info(target.name~' build finished. Total models: ' ~ results | length) }}"</span> 
+</code></pre></div>
+                                    <div class="explanation">
+                                        <h6 class="fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Explanation</h6>
+                                        <ul>
+                                            <li><strong>profile:</strong> Links to your <code>profiles.yml</code> connection.</li>
+                                            <li><strong>paths:</strong> Defines where dbt finds your files (models, seeds, etc.).</li>
+                                            <li><strong>vars:</strong> Defines a global variable <code>project_start_date</code>.</li>
+                                            <li><strong>models configuration:</strong> This is the core. It sets a project-wide default materialization (<code>view</code>) and then overrides it for each layer: <code>staging</code> (ephemeral), <code>intermediate</code> (ephemeral), and <code>marts</code> (table). It also assigns different schemas (<code>raw_stage</code>, <code>int_stage</code>, <code>analytics</code>) to each layer.</li>
+                                            <li><strong>on-run-end:</strong> Executes Jinja/SQL after a run completes, here logging a success message.</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#file-2" aria-expanded="false" aria-controls="file-2">
+                                    <i class="bi bi-box-seam me-2"></i> <strong><code>packages.yml</code></strong> (Project Root)
+                                </button>
+                            </h2>
+                            <div id="file-2" class="accordion-collapse collapse" data-bs-parent="#projectFilesAccordion">
+                                <div class="accordion-body">
+<div class="code-block"><pre><code class="language-yaml"><span class="comment"># packages.yml</span> 
+<span class="yaml-key">packages:</span> 
+  - <span class="yaml-key">package:</span> <span class="yaml-string">dbt-labs/dbt_utils</span> 
+    <span class="yaml-key">version:</span> <span class="yaml-string">1.1.1</span> <span class="comment"># Use the latest stable version you prefer</span> 
+  - <span class="yaml-key">package:</span> <span class="yaml-string">dbt-labs/dbt_expectations</span> 
+    <span class="yaml-key">version:</span> <span class="yaml-string">0.10.0</span> <span class="comment"># Use the latest stable version you prefer</span> 
+</code></pre></div>
+                                    <div class="explanation">
+                                        <h6 class="fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Explanation</h6>
+                                        <p>Defines external dbt packages to install.</p>
+                                        <ul>
+                                            <li><strong>dbt_utils:</strong> Provides common SQL macros (e.g., <code>surrogate_key</code>, <code>datediff</code>).</li>
+                                            <li><strong>dbt_expectations:</strong> Provides a rich set of data quality tests (e.g., <code>expect_column_values_to_be_between</code>).</li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#file-3" aria-expanded="false" aria-controls="file-3">
+                                    <i class="bi bi-filetype-csv me-2"></i> <strong><code>data/product_categories.csv</code></strong>
+                                </button>
+                            </h2>
+                            <div id="file-3" class="accordion-collapse collapse" data-bs-parent="#projectFilesAccordion">
+                                <div class="accordion-body">
+<div class="code-block"><pre><code class="language-csv">category_id,category_name,is_active,last_updated_at 
+1,Electronics,TRUE,2024-01-01 
+2,Books,TRUE,2024-01-05 
+3,Apparel,TRUE,2024-01-10 
+4,Home Goods,FALSE,2024-01-15 
+5,Sports & Outdoors,TRUE,2024-01-20 
+</code></pre></div>
+                                    <div class="explanation">
+                                        <h6 class="fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Explanation</h6>
+                                        <p>A simple CSV file representing static lookup data. This will be loaded as a table named <code>product_categories</code> in your target schema when you run <code>dbt seed</code>.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#file-4" aria-expanded="false" aria-controls="file-4">
+                                    <i class="bi bi-tools me-2"></i> <strong><code>macros/</code></strong> (Directory)
+                                </button>
+                            </h2>
+                            <div id="file-4" class="accordion-collapse collapse" data-bs-parent="#projectFilesAccordion">
+                                <div class="accordion-body">
+                                    <p>This directory contains custom macros and tests.</p>
+                                    <ul class="nav nav-tabs nav-tabs-secondary" id="macroTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="macro-1-tab" data-bs-toggle="tab" data-bs-target="#macro-1-pane" type="button" role="tab">get_current_timestamp.sql</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="macro-2-tab" data-bs-toggle="tab" data-bs-target="#macro-2-pane" type="button" role="tab">test_is_positive_number.sql</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="macro-3-tab" data-bs-toggle="tab" data-bs-target="#macro-3-pane" type="button" role="tab">schema.yml</button>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content" id="macroTabsContent">
+                                        <div class="tab-pane fade show active" id="macro-1-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>macros/get_current_timestamp.sql</code></h6>
+<div class="code-block"><pre><code class="language-sql"><span class="sql-function">{% macro</span> get_current_timestamp() <span class="sql-function">%}</span> 
+  <span class="comment">-- Returns the current UTC timestamp</span> 
+  <span class="comment">-- Example usage: SELECT ..., {{ get_current_timestamp() }} as loaded_at</span> 
+  <span class="sql-keyword">CURRENT_TIMESTAMP</span>() 
+<span class="sql-function">{% endmacro %}</span> 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>A simple Jinja macro that returns the database's current timestamp. Useful for adding audit columns like <code>loaded_at</code>.</p>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade" id="macro-2-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>macros/test_is_positive_number.sql</code> (Custom Generic Test)</h6>
+<div class="code-block"><pre><code class="language-sql"><span class="sql-function">{% test</span> is_positive_number(model, column_name) <span class="sql-function">%}</span> 
+  <span class="comment">-- Custom generic test to check if a numeric column contains only positive values.</span> 
+  <span class="comment">-- This test will pass if all values are > 0.</span> 
+  <span class="sql-keyword">SELECT</span>
+    {{ column_name }} 
+  <span class="sql-keyword">FROM</span> {{ model }} 
+  <span class="sql-keyword">WHERE</span> {{ column_name }} <= 0 
+<span class="sql-function">{% endtest %}</span> 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>Defines a custom generic test named <code>is_positive_number</code>. dbt passes in <code>model</code> and <code>column_name</code>. The test fails if the SQL query returns any rows (i.e., if any values are 0 or negative).</p>
+                                            </div>
+                                        </div>
+                                        <div class="tab-pane fade" id="macro-3-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>macros/schema.yml</code> (Macro Documentation)</h6>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">macros:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">get_current_timestamp</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Returns the current UTC timestamp from the data warehouse. Useful for audit columns like 'loaded_at'."</span> 
+    
+  - <span class="yaml-key">name:</span> <span class="yaml-string">is_positive_number</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Custom generic test to assert that all values in a numeric column are strictly positive (greater than 0)."</span> 
+    <span class="yaml-key">arguments:</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">column_name</span> 
+        <span class="yaml-key">description:</span> <span class="yaml-string">"The name of the column to test for positive values."</span> 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>This YAML file documents the custom macros, providing descriptions for the macros and their arguments. This information will appear in the dbt Docs UI.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#file-5" aria-expanded="false" aria-controls="file-5">
+                                    <i class="bi bi-folder-fill me-2" style="color: var(--bs-primary);"></i> <strong><code>models/</code></strong> (Directory)
+                                </button>
+                            </h2>
+                            <div id="file-5" class="accordion-collapse collapse" data-bs-parent="#projectFilesAccordion">
+                                <div class="accordion-body">
+                                    <p>This is the core directory containing all data transformations, organized into layers.</p>
+                                    <ul class="nav nav-tabs nav-tabs-secondary" id="modelTabs" role="tablist">
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link active" id="model-1-tab" data-bs-toggle="tab" data-bs-target="#model-1-pane" type="button" role="tab">sources.yml</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="model-2-tab" data-bs-toggle="tab" data-bs-target="#model-2-pane" type="button" role="tab">staging/</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="model-3-tab" data-bs-toggle="tab" data-bs-target="#model-3-pane" type="button" role="tab">intermediate/</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="model-4-tab" data-bs-toggle="tab" data-bs-target="#model-4-pane" type="button" role="tab">marts/</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="model-5-tab" data-bs-toggle="tab" data-bs-target="#model-5-pane" type="button" role="tab">exposures.yml</button>
+                                        </li>
+                                        <li class="nav-item" role="presentation">
+                                            <button class="nav-link" id="model-6-tab" data-bs-toggle="tab" data-bs-target="#model-6-pane" type="button" role="tab">metrics.yml</button>
+                                        </li>
+                                    </ul>
+                                    <div class="tab-content" id="modelTabsContent">
+                                        <div class="tab-pane fade show active" id="model-1-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/sources.yml</code></h6>
+                                            <div class="alert alert-warning mt-2">
+                                                <strong>Remember:</strong> Replace <code>your_database</code> and <code>your_schema</code> with your actual raw data location.
+                                            </div>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">sources:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">raw_ecommerce_data</span> <span class="comment"># Logical grouping</span> 
+    <span class="yaml-key">database:</span> <span class="yaml-string">your_database</span> 
+    <span class="yaml-key">schema:</span> <span class="yaml-string">your_schema</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Contains raw, untransformed data ingested directly..."</span> 
+    
+    <span class="yaml-key">tables:</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">raw_customers</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Raw customer demographic and registration information..."</span>
+        <span class="yaml-key">loaded_at_field:</span> <span class="yaml-string">updated_at</span> <span class="comment"># Column to check freshness</span>
+        <span class="yaml-key">freshness:</span>
+          <span class="yaml-key">warn_after:</span> {<span class="yaml-key">count:</span> 24, <span class="yaml-key">period:</span> hour}
+          <span class="yaml-key">error_after:</span> {<span class="yaml-key">count:</span> 48, <span class="yaml-key">period:</span> hour}
+        <span class="yaml-key">columns:</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">"Unique identifier for the customer."</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">unique</span>
+              - <span class="yaml-string">not_null</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">email</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">"Customer's email address. Potentially PII."</span>
+            <span class="yaml-key">tags:</span> [<span class="yaml-string">'pii'</span>] 
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">not_null</span> 
+
+      - <span class="yaml-key">name:</span> <span class="yaml-string">raw_orders</span> 
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Raw transactional data for customer orders."</span> 
+        <span class="yaml-key">loaded_at_field:</span> <span class="yaml-string">order_date</span> 
+        <span class="yaml-key">freshness:</span>
+          <span class="yaml-key">warn_after:</span> {<span class="yaml-key">count:</span> 1, <span class="yaml-key">period:</span> day} 
+          <span class="yaml-key">error_after:</span> {<span class="yaml-key">count:</span> 2, <span class="yaml-key">period:</span> day} 
+        <span class="yaml-key">columns:</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">unique</span> 
+              - <span class="yaml-string">not_null</span> 
+          - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">"Foreign key linking to raw_customers."</span> 
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">not_null</span> 
+              - <span class="yaml-key">relationships:</span> 
+                  <span class="yaml-key">to:</span> <span class="yaml-string">source('raw_ecommerce_data', 'raw_customers')</span> 
+                  <span class="yaml-key">field:</span> <span class="yaml-string">customer_id</span> 
+          - <span class="yaml-key">name:</span> <span class="yaml-string">amount</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-key">dbt_expectations.expect_column_values_to_be_between:</span> 
+                  <span class="yaml-key">min_value:</span> <span class="yaml-string">0.01</span> 
+                  <span class="yaml-key">max_value:</span> <span class="yaml-string">10000.00</span> 
+                  
+      - <span class="yaml-key">name:</span> <span class="yaml-string">raw_payments</span> 
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Raw payment details for each order."</span> 
+        <span class="yaml-key">loaded_at_field:</span> <span class="yaml-string">payment_date</span> 
+        <span class="yaml-key">freshness:</span>
+          <span class="yaml-key">warn_after:</span> {<span class="yaml-key">count:</span> 6, <span class="yaml-key">period:</span> hour} 
+          <span class="yaml-key">error_after:</span> {<span class="yaml-key">count:</span> 12, <span class="yaml-key">period:</span> hour} 
+        <span class="yaml-key">columns:</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">payment_id</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">unique</span> 
+              - <span class="yaml-string">not_null</span> 
+          - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">not_null</span> 
+              - <span class="yaml-key">relationships:</span> 
+                  <span class="yaml-key">to:</span> <span class="yaml-string">source('raw_ecommerce_data', 'raw_orders')</span> 
+                  <span class="yaml-key">field:</span> <span class="yaml-string">order_id</span> 
+          - <span class="yaml-key">name:</span> <span class="yaml-string">payment_method</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-key">accepted_values:</span> 
+                  <span class="yaml-key">values:</span> [<span class="yaml-string">'credit_card'</span>, <span class="yaml-string">'bank_transfer'</span>, <span class="yaml-string">'gift_card'</span>, <span class="yaml-string">'paypal'</span>] 
+          - <span class="yaml-key">name:</span> <span class="yaml-string">amount</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">is_positive_number</span> <span class="comment"># Using our custom generic test!</span> 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <h6 class="fw-bold"><i class="bi bi-info-circle-fill me-2"></i>Explanation</h6>
+                                                <ul>
+                                                    <li>Defines the three raw source tables: <code>raw_customers</code>, <code>raw_orders</code>, <code>raw_payments</code>.</li>
+                                                    <li>Includes descriptions, column descriptions, and <strong>freshness checks</strong> to monitor data ingestion latency.</li>
+                                                    <li>Applies standard tests (<code>unique</code>, <code>not_null</code>, <code>relationships</code>, <code>accepted_values</code>).</li>
+                                                    <li>Uses a <code>dbt_expectations</code> test (<code>expect_column_values_to_be_between</code>).</li>
+                                                    <li>Uses our <strong>custom generic test</strong> <code>is_positive_number</code> on <code>raw_payments.amount</code>.</li>
+                                                    <li>Shows column-level tagging (<code>pii</code> on email).</li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="tab-pane fade" id="model-2-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/staging/</code> (Directory)</h6>
+                                            <p>This layer performs light transformations, renaming, and type casting. These models are <strong>ephemeral</strong> as defined in <code>dbt_project.yml</code>.</p>
+                                            <div class="accordion accordion-flush" id="stagingAccordion">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#staging-1" aria-expanded="false">
+                                                            <code>staging_schema.yml</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="staging-1" class="accordion-collapse collapse" data-bs-parent="#stagingAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">models:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">stg_customers</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Staging model for 'raw_customers'. Cleans and standardizes customer data."</span> 
+    <span class="yaml-key">columns:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span> 
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Unique identifier for the customer (primary key)."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">email</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Customer's email address, converted to lowercase."</span> 
+        
+  - <span class="yaml-key">name:</span> <span class="yaml-string">stg_orders</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Staging model for 'raw_orders'. Cleans and standardizes order data."</span> 
+    <span class="yaml-key">columns:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span> 
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Unique identifier for the order."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Foreign key to 'stg_customers'."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_total_amount</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Total amount of the order."</span> 
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">stg_payments</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Staging model for 'raw_payments'. Cleans and standardizes payment data."</span> 
+    <span class="yaml-key">columns:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">payment_id</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Unique identifier for the payment."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Foreign key to 'stg_orders'."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">payment_amount</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Amount of this individual payment."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">payment_status</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Status of the payment (e.g., 'completed', 'failed')."</span> 
+</code></pre></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#staging-2" aria-expanded="false">
+                                                            <code>stg_customers.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="staging-2" class="accordion-collapse collapse" data-bs-parent="#stagingAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/staging/stg_customers.sql</span> 
+<span class="comment">-- Cleans and prepares raw customer data.</span> 
+<span class="sql-keyword">SELECT</span>
+    customer_id, 
+    first_name, 
+    last_name, 
+    <span class="sql-function">LOWER</span>(email) <span class="sql-keyword">AS</span> email, <span class="comment">-- Standardize email</span> 
+    registration_date, 
+    updated_at 
+<span class="sql-keyword">FROM</span> {{ <span class="sql-function">source</span>('raw_ecommerce_data', 'raw_customers') }} 
+<span class="sql-keyword">WHERE</span> customer_id <span class="sql-keyword">IS NOT NULL</span> 
+</code></pre></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#staging-3" aria-expanded="false">
+                                                            <code>stg_orders.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="staging-3" class="accordion-collapse collapse" data-bs-parent="#stagingAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/staging/stg_orders.sql</span> 
+<span class="sql-keyword">SELECT</span>
+    order_id, 
+    customer_id, 
+    order_date, 
+    order_status, 
+    amount <span class="sql-keyword">AS</span> order_total_amount <span class="comment">-- Rename for clarity</span> 
+<span class="sql-keyword">FROM</span> {{ <span class="sql-function">source</span>('raw_ecommerce_data', 'raw_orders') }} 
+<span class="sql-keyword">WHERE</span> order_id <span class="sql-keyword">IS NOT NULL</span> 
+</code></pre></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#staging-4" aria-expanded="false">
+                                                            <code>stg_payments.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="staging-4" class="accordion-collapse collapse" data-bs-parent="#stagingAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/staging/stg_payments.sql</span> 
+<span class="sql-keyword">SELECT</span>
+    payment_id, 
+    order_id, 
+    payment_method, 
+    amount <span class="sql-keyword">AS</span> payment_amount, <span class="comment">-- Rename</span> 
+    payment_date, 
+    status <span class="sql-keyword">AS</span> payment_status <span class="comment">-- Rename</span> 
+<span class="sql-keyword">FROM</span> {{ <span class="sql-function">source</span>('raw_ecommerce_data', 'raw_payments') }} 
+<span class="sql-keyword">WHERE</span> payment_id <span class="sql-keyword">IS NOT NULL</span> 
+</code></pre></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="tab-pane fade" id="model-3-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/intermediate/</code> (Directory)</h6>
+                                            <p>This layer joins staging models and performs more complex transformations. These models are also <strong>ephemeral</strong>, acting as CTEs for the final mart models.</p>
+                                            <div class="accordion accordion-flush" id="intermediateAccordion">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#int-1" aria-expanded="false">
+                                                            <code>intermediate_schema.yml</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="int-1" class="accordion-collapse collapse" data-bs-parent="#intermediateAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">models:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">int_customer_order_payments</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Combines customer, order, and payment data at the order level. Serves as an intermediate step..."</span> 
+    <span class="yaml-key">columns:</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_name</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Full name of the customer (first name + last name)."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">total_payments</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Sum of all payments received for this order."</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">payment_methods_used</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Comma-separated list of unique payment methods used for this order."</span> 
+</code></pre></div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#int-2" aria-expanded="false">
+                                                            <code>int_customer_order_payments.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="int-2" class="accordion-collapse collapse" data-bs-parent="#intermediateAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/intermediate/int_customer_order_payments.sql</span> 
+<span class="sql-keyword">WITH</span> orders <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span> * <span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('stg_orders') }} 
+),
+customers <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span>
+        customer_id, 
+        first_name, 
+        last_name, 
+        email <span class="sql-keyword">AS</span> customer_email 
+    <span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('stg_customers') }} 
+),
+payments <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span>
+        order_id, 
+        payment_amount, 
+        payment_method 
+    <span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('stg_payments') }} 
+),
+order_payments_agg <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span>
+        order_id, 
+        <span class="sql-function">SUM</span>(payment_amount) <span class="sql-keyword">AS</span> total_payments, 
+        <span class="sql-function">LISTAGG</span>(<span class="sql-keyword">DISTINCT</span> payment_method, ', ') <span class="sql-keyword">WITHIN GROUP</span> (<span class="sql-keyword">ORDER BY</span> payment_method) <span class="sql-keyword">AS</span> payment_methods_used 
+    <span class="sql-keyword">FROM</span> payments
+    <span class="sql-keyword">GROUP BY</span> order_id 
+)
+<span class="sql-keyword">SELECT</span>
+    o.order_id, 
+    o.customer_id, 
+    o.order_date, 
+    o.order_status, 
+    o.order_total_amount, 
+    c.first_name || ' ' || c.last_name <span class="sql-keyword">AS</span> customer_name, <span class="comment">-- Concatenate names</span> 
+    c.customer_email, 
+    <span class="sql-function">COALESCE</span>(opa.total_payments, 0) <span class="sql-keyword">AS</span> total_payments, <span class="comment">-- Handle orders with no payments</span> 
+    <span class="sql-function">COALESCE</span>(opa.payment_methods_used, 'No Payments') <span class="sql-keyword">AS</span> payment_methods_used 
+<span class="sql-keyword">FROM</span> orders o
+<span class="sql-keyword">LEFT JOIN</span> customers c <span class="sql-keyword">ON</span> o.customer_id = c.customer_id 
+<span class="sql-keyword">LEFT JOIN</span> order_payments_agg opa <span class="sql-keyword">ON</span> o.order_id = opa.order_id 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>This model joins the three staging models using <code>ref()</code>. It performs aggregations (<code>SUM</code>, <code>LISTAGG</code>) on the payment data and uses <code>COALESCE</code> to handle NULLs.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                        </div>
+
+                                        <div class="tab-pane fade" id="model-4-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/marts/</code> (Directory)</h6>
+                                            <p>The final layer, providing clean, business-friendly tables for analytics. These models are materialized as <strong>tables</strong> for performance, as defined in <code>dbt_project.yml</code>.</p>
+                                            <div class="accordion accordion-flush" id="martsAccordion">
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mart-1" aria-expanded="false">
+                                                            <code>marts_schema.yml</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="mart-1" class="accordion-collapse collapse" data-bs-parent="#martsAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">models:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">dim_customers</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"The primary customer dimension table. Contains cleansed, unique customer records..."</span> 
+    <span class="yaml-key">columns:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_sk</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Surrogate key for the customer dimension (hash of customer_id)."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">unique</span> 
+          - <span class="yaml-string">not_null</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Natural key for the customer."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">not_null</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_email</span>
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-key">dbt_expectations.expect_column_to_match_regex:</span> 
+              <span class="yaml-key">regex:</span> <span class="yaml-string">'^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$'</span> 
+          - <span class="yaml-key">dbt_expectations.expect_column_to_be_unique_within_n_percent:</span> 
+              <span class="yaml-key">percent_of_total:</span> <span class="yaml-string">100</span> 
+              
+  - <span class="yaml-key">name:</span> <span class="yaml-string">fact_orders</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"A comprehensive fact table containing all completed orders..."</span> 
+    <span class="yaml-key">columns:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span>
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">unique</span> 
+          - <span class="yaml-string">not_null</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Foreign key linking to 'dim_customers'."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">not_null</span> 
+          - <span class="yaml-key">relationships:</span> 
+              <span class="yaml-key">to:</span> <span class="yaml-string">ref('dim_customers')</span> 
+              <span class="yaml-key">field:</span> <span class="yaml-string">customer_id</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">order_total_amount</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Total amount of the order. Expected to be positive."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">not_null</span> 
+          - <span class="yaml-string">is_positive_number</span> <span class="comment"># Custom test!</span> 
+          - <span class="yaml-key">dbt_expectations.expect_column_values_to_be_between:</span> 
+              <span class="yaml-key">min_value:</span> <span class="yaml-string">0.01</span> 
+              <span class="yaml-key">max_value:</span> <span class="yaml-string">10000.00</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">total_payments_received</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Total sum of payments recorded for this order."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-key">dbt_expectations.expect_column_pair_values_to_be_equal:</span> 
+              <span class="yaml-key">column_A:</span> <span class="yaml-string">order_total_amount</span> 
+              <span class="yaml-key">column_B:</span> <span class="yaml-string">total_payments_received</span> 
+              <span class="yaml-key">row_condition:</span> <span class="yaml-string">"order_status = 'completed'"</span> 
+      - <span class="yaml-key">name:</span> <span class="yaml-string">num_payments</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">"Count of individual payment transactions."</span> 
+        <span class="yaml-key">tests:</span>
+          - <span class="yaml-string">not_null</span> 
+          - <span class="yaml-string">is_positive_number</span> 
+</code></pre></div>
+                                                            <div class="explanation">
+                                                                <p>Applies rich documentation and advanced <code>dbt_expectations</code> tests (regex, uniqueness, column pair comparison) to the final mart tables. It also re-uses the <code>is_positive_number</code> custom test and adds a <code>relationships</code> test to ensure referential integrity between the fact and dimension tables.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mart-2" aria-expanded="false">
+                                                            <code>dim_customers.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="mart-2" class="accordion-collapse collapse" data-bs-parent="#martsAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/marts/dim_customers.sql</span> 
+<span class="comment">-- Creates the customer dimension table.</span> 
+<span class="sql-keyword">SELECT</span>
+    {{ <span class="sql-function">dbt_utils.surrogate_key</span>(['customer_id']) }} <span class="sql-keyword">AS</span> customer_sk, <span class="comment">-- Generate a surrogate key</span> 
+    customer_id, 
+    first_name || ' ' || last_name <span class="sql-keyword">AS</span> customer_name, 
+    email <span class="sql-keyword">AS</span> customer_email, 
+    registration_date 
+<span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('stg_customers') }} 
+<span class="sql-keyword">WHERE</span> customer_id <span class="sql-keyword">IS NOT NULL</span> 
+</code></pre></div>
+                                                            <div class="explanation">
+                                                                <p>Creates the final customer dimension. It uses <code>dbt_utils.surrogate_key</code> to generate a unique, consistent surrogate key (<code>customer_sk</code>) from the natural key (<code>customer_id</code>), which is a best practice for dimension tables.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="accordion-item">
+                                                    <h2 class="accordion-header">
+                                                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mart-3" aria-expanded="false">
+                                                            <code>fact_orders.sql</code>
+                                                        </button>
+                                                    </h2>
+                                                    <div id="mart-3" class="accordion-collapse collapse" data-bs-parent="#martsAccordion">
+                                                        <div class="accordion-body">
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- models/marts/fact_orders.sql</span> 
+<span class="comment">-- Creates the orders fact table.</span> 
+<span class="sql-keyword">WITH</span> final_orders <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span>
+        order_id, 
+        customer_id, 
+        order_date, 
+        order_status, 
+        order_total_amount, 
+        total_payments, 
+        payment_methods_used 
+    <span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('int_customer_order_payments') }} 
+),
+payments_count <span class="sql-keyword">AS</span> (
+    <span class="sql-keyword">SELECT</span>
+        order_id, 
+        <span class="sql-function">COUNT</span>(payment_id) <span class="sql-keyword">AS</span> num_payments 
+    <span class="sql-keyword">FROM</span> {{ <span class="sql-function">ref</span>('stg_payments') }} 
+    <span class="sql-keyword">GROUP BY</span> 1 
+)
+<span class="sql-keyword">SELECT</span>
+    fo.order_id, 
+    fo.customer_id, 
+    fo.order_date, 
+    fo.order_status, 
+    fo.order_total_amount, 
+    fo.total_payments <span class="sql-keyword">AS</span> total_payments_received, <span class="comment">-- Rename</span> 
+    pc.num_payments, 
+    fo.payment_methods_used, 
+    {{ <span class="sql-function">get_current_timestamp</span>() }} <span class="sql-keyword">AS</span> loaded_at <span class="comment">-- Using our custom macro!</span> 
+<span class="sql-keyword">FROM</span> final_orders fo
+<span class="sql-keyword">LEFT JOIN</span> payments_count pc <span class="sql-keyword">ON</span> fo.order_id = pc.order_id 
+</code></pre></div>
+                                                            <div class="explanation">
+                                                                <p>Creates the final <code>fact_orders</code> table. It selects from the <code>int_customer_order_payments</code> intermediate model and joins again with <code>stg_payments</code> to get a count of payments (<code>num_payments</code>). It also uses our <strong>custom macro</strong> <code>{{ get_current_timestamp() }}</code> to add a <code>loaded_at</code> audit column.</p>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="tab-pane fade" id="model-5-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/exposures.yml</code></h6>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">exposures:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">executive_dashboard</span> 
+    <span class="yaml-key">type:</span> <span class="yaml-string">dashboard</span> 
+    <span class="yaml-key">owner:</span> 
+      <span class="yaml-key">name:</span> <span class="yaml-string">Data Leadership</span> 
+      <span class="yaml-key">email:</span> <span class="yaml-string">data.leadership@example.com</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Key performance indicators... Source of truth for total revenue..."</span> 
+    <span class="yaml-key">depends_on:</span> 
+      - <span class="yaml-string">ref('fact_orders')</span> 
+      - <span class="yaml-string">ref('dim_customers')</span> 
+    <span class="yaml-key">url:</span> <span class="yaml-string">"https://bi.yourcompany.com/dashboards/executive"</span> 
+    <span class="yaml-key">tags:</span> [<span class="yaml-string">'critical'</span>, <span class="yaml-string">'daily_reporting'</span>] 
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">ml_model_customer_churn</span> 
+    <span class="yaml-key">type:</span> <span class="yaml-string">ml</span> 
+    <span class="yaml-key">owner:</span> 
+      <span class="yaml-key">name:</span> <span class="yaml-string">Data Science Team</span> 
+      <span class="yaml-key">email:</span> <span class="yaml-string">data.science@example.com</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Machine Learning model predicting customer churn..."</span> 
+    <span class="yaml-key">depends_on:</span> 
+      - <span class="yaml-string">ref('int_customer_order_payments')</span> <span class="comment"># ML models often use intermediate features</span> 
+    <span class="yaml-key">url:</span> <span class="yaml-string">"https://gitlab.yourcompany.com/ds/churn_prediction"</span> 
+    <span class="yaml-key">tags:</span> [<span class="yaml-string">'machine_learning'</span>, <span class="yaml-string">'customer_analytics'</span>] 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>Defines two "exposures" (downstream consumers of your data): a dashboard and an ML model. This documents their <code>type</code>, <code>owner</code>, <code>description</code>, and <code>url</code>. Critically, <code>depends_on</code> links them to the dbt models they consume, completing the data lineage in dbt Docs.</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="tab-pane fade" id="model-6-pane" role="tabpanel">
+                                            <h6 class="mt-3 fw-bold"><code>models/metrics.yml</code></h6>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span> 
+<span class="yaml-key">metrics:</span> 
+  - <span class="yaml-key">name:</span> <span class="yaml-string">total_revenue</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"The sum of all 'order_total_amount' for completed orders."</span> 
+    <span class="yaml-key">model:</span> <span class="yaml-string">ref('fact_orders')</span> 
+    <span class="yaml-key">calculation_method:</span> <span class="yaml-string">sum</span> 
+    <span class="yaml-key">expression:</span> <span class="yaml-string">order_total_amount</span> 
+    <span class="yaml-key">timestamp:</span> <span class="yaml-string">order_date</span> 
+    <span class="yaml-key">time_grains:</span> [<span class="yaml-string">day</span>, <span class="yaml-string">week</span>, <span class="yaml-string">month</span>, <span class="yaml-string">quarter</span>, <span class="yaml-string">year</span>] 
+    <span class="yaml-key">filters:</span> 
+      - <span class="yaml-key">field:</span> <span class="yaml-string">order_status</span> 
+        <span class="yaml-key">operator:</span> <span class="yaml-string">'='</span> 
+        <span class="yaml-key">value:</span> <span class="yaml-string">'completed'</span> 
+    <span class="yaml-key">dimensions:</span> 
+      - <span class="yaml-string">customer_id</span> 
+      - <span class="yaml-string">order_date</span> 
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">average_order_value</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"The average 'order_total_amount' for completed orders."</span> 
+    <span class="yaml-key">model:</span> <span class="yaml-string">ref('fact_orders')</span> 
+    <span class="yaml-key">calculation_method:</span> <span class="yaml-string">average</span> 
+    <span class="yaml-key">expression:</span> <span class="yaml-string">order_total_amount</span> 
+    <span class="yaml-key">timestamp:</span> <span class="yaml-string">order_date</span> 
+    <span class="yaml-key">time_grains:</span> [<span class="yaml-string">day</span>, <span class="yaml-string">week</span>, <span class="yaml-string">month</span>] 
+    <span class="yaml-key">filters:</span>
+      - {<span class="yaml-key">field:</span> order_status, <span class="yaml-key">operator:</span> '=', <span class="yaml-key">value:</span> 'completed'} 
+    <span class="yaml-key">dimensions:</span>
+      - <span class="yaml-string">customer_id</span> 
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">active_customers</span> 
+    <span class="yaml-key">description:</span> <span class="yaml-string">"Count of unique customers with at least one completed order..."</span> 
+    <span class="yaml-key">model:</span> <span class="yaml-string">ref('fact_orders')</span> 
+    <span class="yaml-key">calculation_method:</span> <span class="yaml-string">count_distinct</span> 
+    <span class="yaml-key">expression:</span> <span class="yaml-string">customer_id</span> 
+    <span class="yaml-key">timestamp:</span> <span class="yaml-string">order_date</span> 
+    <span class="yaml-key">time_grains:</span> [<span class="yaml-string">day</span>, <span class="yaml-string">week</span>, <span class="yaml-string">month</span>, <span class="yaml-string">quarter</span>, <span class="yaml-string">year</span>] 
+    <span class="yaml-key">filters:</span>
+      - {<span class="yaml-key">field:</span> order_status, <span class="yaml-key">operator:</span> '=', <span class="yaml-key">value:</span> 'completed'} 
+</code></pre></div>
+                                            <div class="explanation">
+                                                <p>Defines three key business metrics: <code>total_revenue</code>, <code>average_order_value</code>, and <code>active_customers</code>. Each metric specifies its underlying model, calculation method, column, timestamp, filters, and dimensions. These are foundational for the dbt Semantic Layer and will also appear in dbt Docs.</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div> </div>
+            </div>
+        </div>
+    </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Jobs: The Engine for Production Data</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+            --bs-success-light: #e6f7f0;
+            --bs-warning-light: #fffbeb;
+            --bs-danger-light: #fdf0f0;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .hero-header-product {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Tabs Styling */
+        .nav-tabs .nav-link {
+            color: var(--bs-secondary);
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+            border-bottom-width: 3px;
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+        /* Accordion Styling */
+        .accordion-button {
+            font-weight: 500;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bs-primary-light);
+            color: var(--bs-primary);
+            box-shadow: none;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: var(--bs-dark-purple);
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .code-block .comment { color: #9a9a9a; }
+        .code-block .yaml-key { color: #66d9ef; }
+        .code-block .yaml-string { color: #e6db74; }
+        .code-block .sql-keyword { color: #f92672; }
+        .code-block .sql-function { color: #a6e22e; }
+        .code-block .sql-jinja { color: #fd971f; }
+        
+        /* Log simulation */
+        .log-output {
+            background-color: #212529;
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+            overflow-x: auto;
+        }
+        .log-output .log-time { color: #888; }
+        .log-output .log-info { color: #66d9ef; }
+        .log-output .log-error { color: #f92672; font-weight: bold; }
+        .log-output .log-success { color: #a6e22e; }
+        
+        .list-group-item h5 {
+            color: var(--bs-primary);
+        }
+
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+        
+        /* Feature icons */
+        .feature-icon-box {
+            text-align: center;
+            padding: 1.5rem;
+        }
+        .feature-icon-box .bi {
+            font-size: 3rem;
+            color: var(--bs-primary);
+        }
+        
+        /* Process Flow Simulation */
+        .process-flow {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            padding: 1.5rem;
+            background-color: var(--bs-primary-light);
+            border-radius: 0.5rem;
+        }
+        .process-step {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            font-weight: 500;
+            color: var(--bs-primary);
+            flex-grow: 1;
+            margin: 0.5rem;
+        }
+        .process-step .bi {
+            font-size: 1.5rem;
+        }
+        .process-arrow {
+            font-size: 2.5rem;
+            color: var(--bs-primary);
+            opacity: 0.6;
+            flex-grow: 0;
+        }
+
+        /* DAG Simulation */
+        .dag-container {
+            padding: 1.5rem;
+            background-color: var(--bs-info-light);
+            border-radius: 0.5rem;
+            text-align: center;
+        }
+        .dag-node {
+            display: inline-flex;
+            align-items: center;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 2px solid;
+            margin: 0.5rem;
+        }
+        .dag-node.source { background-color: var(--bs-success-light); border-color: #5cb85c; color: #3d7a3d; }
+        .dag-node.staging { background-color: var(--bs-warning-light); border-color: #f0ad4e; color: #8a6d3b; }
+        .dag-node.mart { background-color: var(--bs-primary-light); border-color: var(--bs-primary); color: var(--bs-primary); }
+        .dag-arrow {
+            font-size: 2rem;
+            color: #888;
+            vertical-align: middle;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header-product text-center">
+                <h1 class="display-4">Mastering dbt Jobs</h1>
+                <p class="lead">The Command Center for Your Production Data Transformations</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            
+            <ul class="nav nav-tabs" id="labTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-1" data-bs-toggle="tab" data-bs-target="#tab-1-pane" type="button" role="tab" aria-selected="true">
+                        <i class="bi bi-rocket-takeoff me-1"></i> What is a dbt Job?
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-2" data-bs-toggle="tab" data-bs-target="#tab-2-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-play-circle me-1"></i> The Build Process
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-3" data-bs-toggle="tab" data-bs-target="#tab-3-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-diagram-3 me-1"></i> DAG & Dependencies
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-4" data-bs-toggle="tab" data-bs-target="#tab-4-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-calendar-check me-1"></i> Scheduling & Config
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-5" data-bs-toggle="tab" data-bs-target="#tab-5-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-bug me-1"></i> Monitoring & Debugging
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-6" data-bs-toggle="tab" data-bs-target="#tab-6-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-file-earmark-zip me-1"></i> Using Artifacts
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="labTabsContent">
+                
+                <div class="tab-pane fade show active" id="tab-1-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">What is a dbt Job?</h3>
+                    <p class="lead">A "dbt Job" is an <strong>orchestrated execution of a dbt project</strong>, typically in a production or scheduled environment. It defines the exact sequence of dbt commands and configurations needed to reliably build, test, and deploy your data models.</p>
+                    
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Why Use dbt Jobs?</h4>
+                    <div class="row">
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-robot"></i>
+                            <h5 class="mt-2">Automation</h5>
+                            <p class="text-muted">Automate your entire data transformation pipeline, removing manual effort.</p>
+                        </div>
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-check-circle"></i>
+                            <h5 class="mt-2">Reliability</h5>
+                            <p class="text-muted">Ensure consistent and repeatable data builds every single time.</p>
+                        </div>
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-clock-history"></i>
+                            <h5 class="mt-2">Scheduling</h5>
+                            <p class="text-muted">Run your dbt project at any interval, from hourly to daily.</p>
+                        </div>
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-bar-chart-steps"></i>
+                            <h5 class="mt-2">Dependency Management</h5>
+                            <p class="text-muted">Automatically handles the correct order of model execution.</p>
+                        </div>
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-bell"></i>
+                            <h5 class="mt-2">Monitoring & Alerting</h5>
+                            <p class="text-muted">Track job status, get success/failure notifications, and debug issues.</p>
+                        </div>
+                        <div class="col-md-4 feature-icon-box">
+                            <i class="bi bi-git"></i>
+                            <h5 class="mt-2">Version Control</h5>
+                            <p class="text-muted">Ensure the code running in production matches your Git repository.</p>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Key Job Types & dbt Cloud Workflows</h4>
+                    <p>For the certification, it's crucial to understand the *different types of jobs* and how they relate to development environments.</p>
+                    
+                    <div class="accordion" id="jobTypesAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseEnv" aria-expanded="true" aria-controls="collapseEnv">
+                                    <i class="bi bi-bounding-box-circles me-2"></i><strong>Job Environments</strong>
+                                </button>
+                            </h2>
+                            <div id="collapseEnv" class="accordion-collapse collapse show" data-bs-parent="#jobTypesAccordion">
+                                <div class="accordion-body">
+                                    <ul class="list-group">
+                                        <li class="list-group-item"><strong>Development:</strong> This isn't a "job." This is your local work in the dbt Cloud IDE, where you write code and use <code>dbt run</code> iteratively.</li>
+                                        <li class="list-group-item"><strong>Continuous Integration (CI):</strong> A temporary environment tied to a "CI Job." It's created automatically when you open a Pull Request to test your changes.</li>
+                                        <li class="list-group-item"><strong>Production:</strong> The final, live environment. It's tied to a "Deployment Job" that runs on a schedule (e.g., daily) and builds your production data.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseDeploy" aria-expanded="false" aria-controls="collapseDeploy">
+                                    <i class="bi bi-calendar-check me-2"></i><strong>Deployment (Production) Jobs</strong>
+                                </button>
+                            </h2>
+                            <div id="collapseDeploy" class="accordion-collapse collapse" data-bs-parent="#jobTypesAccordion">
+                                <div class="accordion-body">
+                                    These are your main, scheduled jobs that build the data your business relies on.
+                                    <ul>
+                                        <li><strong>Trigger:</strong> Run on a fixed schedule (e.g., every day at 6 AM).</li>
+                                        <li><strong>Branch:</strong> Runs against your <code>main</code> (or production) Git branch.</li>
+                                        <li><strong>Command:</strong> Typically runs <code>dbt build</code> to run all models and tests.</li>
+                                        <li><strong>Purpose:</strong> To create and test your final, trusted data models in your production environment.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCI" aria-expanded="false" aria-controls="collapseCI">
+                                    <i class="bi bi-git me-2"></i><strong>Continuous Integration (CI) Jobs</strong>
+                                </button>
+                            </h2>
+                            <div id="collapseCI" class="accordion-collapse collapse" data-bs-parent="#jobTypesAccordion">
+                                <div class="accordion-body">
+                                    These are automated, temporary jobs that check your code for errors *before* you merge it.
+                                    <ul>
+                                        <li><strong>Trigger:</strong> Runs automatically when you open or update a Pull Request (PR).</li>
+                                        <li><strong>Branch:</strong> Runs against your new feature branch (e.g., <code>feature/add-new-model</code>).</li>
+                                        <li><strong>Purpose:</strong> To ensure your changes work, pass all tests, and don't break any downstream models. This prevents errors from ever reaching production.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseSlimCI" aria-expanded="false" aria-controls="collapseSlimCI">
+                                    <i class="bi bi-speedometer2 me-2"></i><strong>"Slim CI" with Deferral (Advanced)</strong>
+                                </button>
+                            </h2>
+                            <div id="collapseSlimCI" class="accordion-collapse collapse" data-bs-parent="#jobTypesAccordion">
+                                <div class="accordion-body">
+                                    <p>This is a critical concept for the exam. You don't want to rebuild your *entire* warehouse on every small PR. It's too slow and expensive.</p>
+                                    <p><strong>Solution: Deferral.</strong> Your CI job builds *only* your changed models and intelligently points to the *existing* production tables for any upstream models it depends on.</p>
+                                    <ul>
+                                        <li>It uses the <code>manifest.json</code> from your last successful production run to understand the state of your production environment.</li>
+                                        <li>This makes CI runs incredibly fast and cost-effective.</li>
+                                    </ul>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># This command builds only modified models and their children.</span>
+<span class="comment"># It --defers to the production manifest to find parents.</span>
+dbt build --select state:modified+ --defer --state ./target-prod
+</code></pre></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="tab-2-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">The Build Process: <code>dbt run</code> vs. <code>dbt build</code></h3>
+                    <p class="lead">Choosing the right command is key to an efficient workflow. While <code>dbt run</code> is great for development, <code>dbt build</code> is the modern standard for production.</p>
+                    
+                    <div class="row mt-4">
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100">
+                                <div class="card-header h5">
+                                    <i class="bi bi-play-fill me-1"></i> dbt run
+                                </div>
+                                <div class="card-body">
+                                    <p>This command focuses only on executing your models.</p>
+                                    <ul>
+                                        <li><strong>What it does:</strong> Creates or updates tables/views in your warehouse based on your model configurations.</li>
+                                        <li><strong>What it does NOT do:</strong> It does not automatically run tests or generate documentation.</li>
+                                        <li><strong>Best Use Case:</strong> Ideal for rapid iteration during development when you only need to build models.</li>
+                                    </ul>
+                                </div>
+                                <div class="card-footer text-muted">Example: <code>dbt run --select my_model</code></div>
+                            </div>
+                        </div>
+                        
+                        <div class="col-md-6 mb-3">
+                            <div class="card h-100 border-primary">
+                                <div class="card-header h5 bg-primary text-white">
+                                    <i class="bi bi-tools me-1"></i> dbt build (Recommended)
+                                </div>
+                                <div class="card-body">
+                                    <p>This is a comprehensive, all-in-one command.</p>
+                                    <ul>
+                                        <li><strong>What it does:</strong> Performs a <code>dbt run</code>, <code>dbt test</code>, and <code>dbt docs generate</code> (if configured) in a single, intelligent command.</li>
+                                        <li><strong>Benefit:</strong> Ensures models are built, data is tested, and documentation is updated in one atomic step.</li>
+                                        <li><strong>Best Use Case:</strong> Highly recommended for all production job deployments.</li>
+                                    </ul>
+                                </div>
+                                <div class="card-footer text-primary border-primary">Example: <code>dbt build --select tag:daily</code></div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">The <code>dbt build</code> Process Flow</h4>
+                    <p>Think of <code>dbt build</code> as a smart pipeline. It intelligently runs each step in the correct order, ensuring that tests only run *after* their corresponding models are built.</p>
+                    <div class="process-flow">
+                        <div class="process-step">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Run Models</span>
+                        </div>
+                        <div class="process-arrow"><i class="bi bi-arrow-right-short"></i></div>
+                        <div class="process-step">
+                            <i class="bi bi-clipboard2-check-fill"></i>
+                            <span>Test Models</span>
+                        </div>
+                        <div class="process-arrow"><i class="bi bi-arrow-right-short"></i></div>
+                        <div class="process-step">
+                            <i class="bi bi-book-fill"></i>
+                            <span>Generate Docs</span>
+                        </div>
+                        <div class="process-arrow"><i class="bi bi-arrow-right-short"></i></div>
+                        <div class="process-step">
+                            <i class="bi bi-check-circle-fill"></i>
+                            <span>Job Succeeded</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-3-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Understanding the DAG & Dependencies</h3>
+                    <p class="lead">dbt's power comes from understanding your project's structure. It does this by building a <strong>Directed Acyclic Graph (DAG)</strong>.</p>
+                    
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">What is the DAG?</h4>
+                    <ul>
+                        <li><strong>Concept:</strong> dbt automatically builds the DAG based on the <code>ref()</code> and <code>source()</code> functions in your models.</li>
+                        <li><strong>Nodes:</strong> Each model, source, seed, or snapshot is a "node" in the graph.</li>
+                        <li><strong>Edges:</strong> The dependencies between nodes (e.g., <code>dim_customers</code> depends on <code>stg_customers</code>) form the "edges."</li>
+                        <li><strong>Execution Order:</strong> dbt uses this graph to determine the correct build order, ensuring upstream models are built before their downstream dependents.</li>
+                        <li><strong>Acyclic:</strong> It's "acyclic" because circular dependencies are not allowed (e.g., Model A can't depend on Model B if Model B already depends on Model A).</li>
+                    </ul>
+
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Simulated DAG Visualization</h4>
+                    <p>You can visualize your project's DAG by running <code>dbt docs generate</code> and <code>dbt docs serve</code>. It would look something like this:</p>
+                    <div class="dag-container">
+                        <div class="dag-node source"><i class="bi bi-database me-2"></i>raw_orders</div>
+                        <span class="dag-arrow"><i class="bi bi-arrow-right"></i></span>
+                        <div class="dag-node staging"><i class="bi bi-file-earmark-code me-2"></i>stg_orders</div>
+                        <span class="dag-arrow"><i class="bi bi-arrow-right"></i></span>
+                        <div class="dag-node mart"><i class="bi bi-bar-chart-fill me-2"></i>fct_orders</div>
+                    </div>
+
+                    <div class="accordion mt-4" id="depsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#deps-collapse" aria-expanded="false" aria-controls="deps-collapse">
+                                    <i class="bi bi-boxes me-2"></i><strong>Managing Dependencies (<code>dbt deps</code>)</strong>
+                                </button>
+                            </h2>
+                            <div id="deps-collapse" class="accordion-collapse collapse" data-bs-parent="#depsAccordion">
+                                <div class="accordion-body">
+                                    <p>The <code>dbt deps</code> command is used to download and install external dbt packages specified in your <code>packages.yml</code> file. These are placed in the <code>dbt_modules/</code> directory.</p>
+                                    <p><strong>Why use packages?</strong></p>
+                                    <ul>
+                                        <li><strong>Reusable Code:</strong> Leverage powerful, pre-built macros and utilities from the dbt community (e.g., <code>dbt-utils</code>).</li>
+                                        <li><strong>Standardization:</strong> Use common, battle-tested patterns across all your projects.</li>
+                                        <li><strong>Maintainability:</strong> External packages can be updated independently of your project code.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-4-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Scheduling & Configuration</h3>
+                    <p class="lead">A job isn't useful unless it can run automatically. dbt, as a command-line tool, relies on external orchestrators for scheduling.</p>
+
+                    <div class="accordion mt-4" id="configAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#config-1" aria-expanded="true" aria-controls="config-1">
+                                    <i class="bi bi-tools me-2"></i><strong>Common Scheduling Tools & Orchestrators</strong>
+                                </button>
+                            </h2>
+                            <div id="config-1" class="accordion-collapse collapse show" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <p>You have many options for scheduling your dbt jobs:</p>
+                                    <ul class="list-group">
+                                        <li class="list-group-item list-group-item-action">
+                                            <strong>dbt Cloud:</strong> The managed service from dbt Labs. It has built-in scheduling, CI/CD, and monitoring. (Highly Recommended for simplicity)
+                                        </li>
+                                        <li class="list-group-item list-group-item-action">
+                                            <strong>Open Source Tools:</strong>
+                                            <ul>
+                                                <li><strong>Apache Airflow:</strong> The industry standard for complex data pipeline orchestration.</li>
+                                                <li><strong>Prefect, Dagster:</strong> Modern, popular alternatives to Airflow.</li>
+                                                <li><strong>Cron:</strong> The simplest option for basic scheduling on Linux/Unix.</li>
+                                            </ul>
+                                        </li>
+                                        <li class="list-group-item list-group-item-action">
+                                            <strong>Cloud-Native Tools:</strong>
+                                            <ul>
+                                                <li><strong>AWS:</strong> Step Functions, Lambda, or AWS Glue.</li>
+                                                <li><strong>GCP:</strong> Cloud Composer (managed Airflow) or Cloud Scheduler + Cloud Functions.</li>
+                                                <li><strong>Azure:</strong> Azure Data Factory or Azure Logic Apps.</li>
+                                            </ul>
+                                        </li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#config-2" aria-expanded="false" aria-controls="config-2">
+                                    <i class="bi bi-sliders me-2"></i><strong>Configuring Jobs (Common CLI Parameters)</strong>
+                                </button>
+                            </h2>
+                            <div id="config-2" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <p>You can configure your job's behavior by passing parameters to the dbt command.</p>
+                                    <ul>
+                                        <li><code>--profile &lt;name&gt;</code>: Specifies which profile from your <code>profiles.yml</code> to use (e.g., production).</li>
+                                        <li><code>--target &lt;name&gt;</code>: Specifies which target within that profile (e.g., prod_warehouse).</li>
+                                        <li><code>--vars '{key: value}'</code>: Passes Jinja variables into your project (e.g., <code>'{end_date: 2024-12-31}'</code>).</li>
+                                        <li><code>--full-refresh</code>: Forces incremental models to rebuild from scratch.</li>
+                                        <li><code>--select &lt;selector&gt;</code>: Selects only specific models, tags, or paths to run.</li>
+                                        <li><code>--exclude &lt;selector&gt;</code>: Excludes specific models from the run.</li>
+                                    </ul>
+                                    <p><strong>Example Job Commands:</strong></p>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># Run all models tagged as 'daily' using the 'production' profile and 'prod_warehouse' target</span>
+dbt run --profile production --target prod_warehouse --select tag:daily
+
+<span class="comment"># Full-refresh the dim_customers model and pass in a variable</span>
+dbt run --full-refresh --select dim_customers --vars '{load_type: initial}'
+</code></pre></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#config-3" aria-expanded="false" aria-controls="config-3">
+                                    <i class="bi bi-magic me-2"></i><strong>Advanced Job Selectors (Certification Topic)</strong>
+                                </button>
+                            </h2>
+                            <div id="config-3" class="accordion-collapse collapse" data-bs-parent="#configAccordion">
+                                <div class="accordion-body">
+                                    <p>For efficient jobs, you *must* know advanced selectors. These save time and money.</p>
+                                    
+                                    <h6>State-Based Selection</h6>
+                                    <p>This uses artifacts from a previous run to decide what to build.</p>
+                                    <ul>
+                                        <li><code>state:modified</code>: Run only the models you've changed (and their children). Perfect for CI jobs.</li>
+                                        <li><code>state:failed</code>: After a job fails, run *only* the models that failed (and their children). Great for recovery.</li>
+                                    </ul>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># CI Job: Build only what I changed and its downstream dependents</span>
+dbt build --select state:modified+
+</code></pre></div>
+
+                                    <h6 class="mt-3">Graph Selectors</h6>
+                                    <p>These use the DAG to select models.</p>
+                                    <ul>
+                                        <li><code>+model_name</code>: Run a model *and all its downstream* dependents.</li>
+                                        <li><code>model_name+</code>: Run a model *and all its upstream* parents.</li>
+                                        <li><code>@model_name</code>: Run a model, its parents, *and* its children.</li>
+                                    </ul>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># I changed stg_customers. I need to run it AND all models that depend on it.</span>
+dbt build --select +stg_customers
+</code></pre></div>
+
+                                    <h6 class="mt-3">Unions & Intersections</h6>
+                                    <ul>
+                                        <li><strong>Union (comma):</strong> <code>dbt build --select tag:daily,fct_orders</code> (Run all daily models *OR* the `fct_orders` model).</li>
+                                        <li><strong>Intersection (space):</strong> <code>dbt build --select tag:daily tag:finance</code> (Run only models that have *BOTH* the `daily` and `finance` tags).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+                
+                <div class="tab-pane fade" id="tab-5-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Monitoring, Troubleshooting & Failures</h3>
+                    <p class="lead">A core part of running production jobs is knowing when things go wrong and how to fix them.</p>
+
+                    <div class="accordion mt-4" id="monitoringAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#mon-1" aria-expanded="true" aria-controls="mon-1">
+                                    <i class="bi bi-eye me-2"></i><strong>Monitoring Job Status & Logs</strong>
+                                </button>
+                            </h2>
+                            <div id="mon-1" class="accordion-collapse collapse show" data-bs-parent="#monitoringAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>How to Check Status:</strong></p>
+                                    <ul>
+                                        <li><strong>Orchestrator Dashboards:</strong> Tools like dbt Cloud, Airflow, and ADF provide a UI to see job status (Running, Success, Failed).</li>
+                                        <li><strong>Exit Codes:</strong> dbt commands return <code>0</code> for success and a non-zero code for failure. Your scheduler can use this to detect failures.</li>
+                                    </ul>
+                                    <p><strong>How to Access Logs:</strong></p>
+                                    <ul>
+                                        <li><strong>Orchestrator Logs:</strong> The best place to find the consolidated logs for a specific job run.</li>
+                                        <li><strong><code>logs/dbt.log</code>:</strong> dbt writes detailed logs to this file within your project directory.</li>
+                                        <li><strong>CLI Output:</strong> Logs are printed to standard output (stdout) when run manually.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mon-2" aria-expanded="false" aria-controls="mon-2">
+                                    <i class="bi bi-exclamation-triangle me-2"></i><strong>Common Job Failures</strong>
+                                </button>
+                            </h2>
+                            <div id="mon-2" class="accordion-collapse collapse" data-bs-parent="#monitoringAccordion">
+                                <div class="accordion-body">
+                                    <p>Orchestrators maintain a job history to track performance and debug issues. Common failures include:</p>
+                                    <ul>
+                                        <li><strong>SQL Compilation Errors:</strong> Syntax errors in your SQL or invalid <code>ref()</code> calls.</li>
+                                        <li><strong>Connection Issues:</strong> Incorrect credentials, network problems, or the warehouse is down.</li>
+                                        <li><strong>Data Quality Issues:</strong> A <code>dbt test</code> fails (e.g., a <code>unique</code> test finds duplicates).</li>
+                                        <li><strong>Permissions Errors:</strong> The dbt user doesn't have <code>CREATE</code> or <code>WRITE</code> permissions on a schema.</li>
+                                        <li><strong>Dependency Issues:</strong> Missing packages (forgot to run <code>dbt deps</code>) or circular dependencies.</li>
+                                        <li><strong>Resource Exhaustion:</strong> The data warehouse ran out of memory or compute.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mon-3" aria-expanded="false" aria-controls="mon-3">
+                                    <i class="bi bi-search me-2"></i><strong>Troubleshooting Steps & Log Simulation</strong>
+                                </button>
+                            </h2>
+                            <div id="mon-3" class="accordion-collapse collapse" data-bs-parent="#monitoringAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Basic Troubleshooting Steps:</strong></p>
+                                    <ol>
+                                        <li><strong>Check the logs immediately.</strong> The error message is your first and best clue.</li>
+                                        <li><strong>Inspect the compiled SQL.</strong> Run <code>dbt compile</code> or check the <code>target/compiled/</code> directory to see the *exact* SQL that was sent to the warehouse.</li>
+                                        <li><strong>Replicate locally.</strong> Try running the failing command on your own machine.</li>
+                                        <li><strong>Isolate the issue.</strong> If a model fails, try commenting out new sections to pinpoint the problematic line.</li>
+                                    </ol>
+                                    
+                                    <p class="mt-3"><strong>Simulated Failure Log:</strong></p>
+                                    <p>When a job fails, your logs are the first place to look. You'll see something like this:</p>
+<div class="log-output"><pre><span class="log-time">14:30:01</span> <span class="log-info">Running with dbt=1.7.5</span>
+<span class="log-time">14:30:02</span> <span class="log-info">Found 10 models, 20 tests, 2 sources</span>
+<span class="log-time">14:30:03</span> <span class="log-info">Concurrency: 4 threads (target='prod')</span>
+<span class="log-time">14:30:04</span> <span class="log-info">1 of 10 START sql table model analytics.fct_orders................... [RUN]</span>
+<span class="log-time">14:30:08</span> <span class="log-error">1 of 10 ERROR creating sql table model analytics.fct_orders......... [ERROR in 4.2s]</span>
+<span class="log-time">14:30:08</span> <span class="log-info">Finished running 1 table model in 0 hours 0 minutes and 7.12s</span>
+<span class="log-time">14:30:09</span> <span class="log-error">Database Error in model fct_orders (models/marts/fct_orders.sql)</span>
+<span class="log-time">14:30:09</span> <span class="log-error">  SQL compilation error:</span>
+<span class="log-time">14:30:09</span> <span class="log-error">  Invalid identifier 'ORDRE_STATUS' in line 23</span>
+<span class="log-time">14:30:09</span> <span class="log-error">  compiled SQL at target/compiled/my_project/models/marts/fct_orders.sql</span></pre></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#mon-4" aria-expanded="false" aria-controls="mon-4">
+                                    <i class="bi bi-shield-check me-2"></i><strong>Proactive Monitoring & Alerting (Certification Topic)</strong>
+                                </button>
+                            </h2>
+                            <div id="mon-4" class="accordion-collapse collapse" data-bs-parent="#monitoringAccordion">
+                                <div class="accordion-body">
+                                    <p>Don't just wait for failures. Be proactive.</p>
+                                    
+                                    <h6>dbt Cloud Alerting</h6>
+                                    <p>In the dbt Cloud UI, you can configure your jobs to send notifications on success or failure to:</p>
+                                    <ul>
+                                        <li>Email addresses</li>
+                                        <li>Slack channels (e.g., <code>#dbt-alerts</code>)</li>
+                                    </ul>
+                                    <p>This ensures the right people (model owners, data team) are notified immediately when a job fails.</p>
+
+                                    <h6 class="mt-3">Source Freshness Jobs</h6>
+                                    <p>You can create a *separate* dbt job that *only* runs <code>dbt source freshness</code>. Schedule this job to run every hour.</p>
+                                    <p>This job acts as an early warning system. It will fail and alert you if your raw data (from ELT tools like Fivetran or Airbyte) is delayed *before* your main production job even starts.</p>
+<div class="code-block"><pre><code class="language-bash"><span class="comment"># Command for a dedicated freshness monitoring job</span>
+dbt source freshness
+</code></pre></div>
+
+                                    <h6 class="mt-3">Analyzing Run History Trends</h6>
+                                    <p>Use the "Run History" in dbt Cloud to look for more than just failures. Ask analytical questions:</p>
+                                    <ul>
+                                        <li>"Is the <code>fct_orders</code> model taking longer to run every day?" (Indicates you need to optimize its query).</li>
+                                        <li>"Is our CI job time creeping up?" (Indicates you may need to refactor or improve deferral).</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-6-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Leveraging dbt Artifacts</h3>
+                    <p class="lead">dbt generates JSON files, called "artifacts," that contain metadata about your project and its execution. These are stored in the <code>target/</code> directory after a run.</p>
+
+                    <div class="accordion mt-4" id="artifactsAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#art-1" aria-expanded="true" aria-controls="art-1">
+                                    <i class="bi bi-file-earmark-text me-2"></i><strong><code>manifest.json</code> (The Blueprint)</strong>
+                                </button>
+                            </h2>
+                            <div id="art-1" class="accordion-collapse collapse show" data-bs-parent="#artifactsAccordion">
+                                <div class="accordion-body">
+                                    <p>This file is a <strong>comprehensive snapshot of your entire dbt project's state.</strong> It contains everything:</p>
+                                    <ul>
+                                        <li>All models, sources, seeds, tests, macros, and exposures.</li>
+                                        <li>Their full configurations, dependencies (<code>depends_on</code>), and compiled SQL.</li>
+                                        <li>All metadata, including descriptions, columns, and tags.</li>
+                                    </ul>
+                                    <p><strong>Primary Use Cases:</strong></p>
+                                    <ul>
+                                        <li><strong>dbt Docs:</strong> This file is the primary source used to generate your dbt documentation website.</li>
+                                        <li><strong>Deferral ("Slim CI"):</strong> dbt Cloud compares your PR's manifest against the production manifest to determine what changed.</li>
+                                        <li><strong>Lineage Tools:</strong> External tools use it to understand your data lineage.</li>
+                                    </ul>
+<div class="code-block"><pre><code class="language-json">{
+  "metadata": { ... },
+  "nodes": {
+    "model.my_project.fct_orders": {
+      "unique_id": "model.my_project.fct_orders",
+      "resource_type": "model",
+      "depends_on": {
+        "nodes": [ "model.my_project.stg_orders" ],
+        "macros": []
+      },
+      "config": { "materialized": "table", "tags": ["daily"] },
+      "compiled_sql": "select ... from {{ ref('stg_orders') }} ...",
+      ...
+    },
+    ...
+  },
+  "sources": { ... }
+}</code></pre></div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#art-2" aria-expanded="false" aria-controls="art-2">
+                                    <i class="bi bi-receipt me-2"></i><strong><code>run_results.json</code> (The Receipt)</strong>
+                                </button>
+                            </h2>
+                            <div id="art-2" class="accordion-collapse collapse" data-bs-parent="#artifactsAccordion">
+                                <div class="accordion-body">
+                                    <p>This file contains detailed results about the <strong>most recent dbt command</strong> that was run (like <code>dbt run</code> or <code>dbt build</code>).</p>
+                                    <ul>
+                                        <li><strong>Content:</strong> Start/end times, execution duration for each model/test.</li>
+                                        <li><strong>Status:</strong> The final outcome (<code>success</code>, <code>failure</code>, <code>skipped</code>).</li>
+                                        <li><strong>Details:</strong> Number of rows affected, and any error messages encountered.</li>
+                                    </ul>
+                                    <p><strong>Primary Use Cases:</strong></p>
+                                    <ul>
+                                        <li><strong>Programmatic Monitoring:</strong> Write custom scripts to parse this file and send alerts.</li>
+                                        <li><strong>Performance Analysis:</strong> Track model run times to identify bottlenecks.</li>
+                                        <li><strong>dbt Cloud Run History:</strong> This file is used to populate the run history you see in the UI.</li>
+                                    </ul>
+<div class="code-block"><pre><code class="language-json">{
+  "metadata": { "dbt_version": "1.7.5", ... },
+  "results": [
+    {
+      "status": "success",
+      "timing": [ ... ],
+      "thread_id": "Thread-1",
+      "execution_time": 4.25,
+      "unique_id": "model.my_project.stg_orders",
+      "adapter_response": { "rows_affected": 1000, ... }
+    },
+    {
+      "status": "error",
+      "execution_time": 3.1,
+      "unique_id": "model.my_project.fct_orders",
+      "message": "Database Error: Invalid identifier 'ORDRE_STATUS'"
+    }
+  ],
+  "elapsed_time": 10.5,
+  "args": { ... }
+}</code></pre></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#art-3" aria-expanded="false" aria-controls="art-3">
+                                    <i class="bi bi-journal-album me-2"></i><strong><code>catalog.json</code> (The Warehouse State)</strong>
+                                </button>
+                            </h2>
+                            <div id="art-3" class="accordion-collapse collapse" data-bs-parent="#artifactsAccordion">
+                                <div class="accordion-body">
+                                    <p>This artifact is generated by the <code>dbt docs generate</code> command. It contains metadata pulled *from* your data warehouse, not just from your project code.</p>
+                                    <ul>
+                                        <li><strong>Content:</strong> Table schemas, column data types, table statistics (if available), and column statistics.</li>
+                                        <li><strong>Use Case:</strong> It's used by <strong>dbt Docs</strong> to populate the "Database" section on a model's page, showing the actual schema that exists in your warehouse. This helps you spot mismatches between your <code>.yml</code> file and the database.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#art-4" aria-expanded="false" aria-controls="art-4">
+                                    <i class="bi bi-stopwatch me-2"></i><strong><code>sources.json</code> (The Freshness Report)</strong>
+                                </button>
+                            </h2>
+                            <div id="art-4" class="accordion-collapse collapse" data-bs-parent="#artifactsAccordion">
+                                <div class="accordion-body">
+                                    <p>This small artifact is generated by the <code>dbt source freshness</code> command.</p>
+                                    <ul>
+                                        <li><strong>Content:</strong> The results of your source freshness check, including status (<code>pass</code>, <code>warn</code>, <code>error</code>), max loaded timestamp, and the configured thresholds.</li>
+                                        <li><strong>Use Case:</strong> Used by dbt Cloud to display the freshness report in the UI. Can also be parsed for custom alerting.</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-primary mt-4" role="alert">
+                      <h4 class="alert-heading"><i class="bi bi-brain me-2"></i>Why Artifacts are the "Brain" of dbt Cloud</h4>
+                      <p>The single most important concept to understand is that <strong>dbt Cloud persists these artifacts</strong> from your last successful production run.</p>
+                      <hr>
+                      <p class="mb-0">This "memory" is what enables all of dbt Cloud's most powerful features:
+                        <ul>
+                            <li><strong>State-based Selection (<code>state:modified</code>):</strong> It compares your new code (new manifest) against the *persisted* production manifest to see what's different.</li>
+                            <li><strong>Deferral ("Slim CI"):</strong> It uses the *persisted* production manifest to find the database location of upstream models you aren't building.</li>
+                            <li><strong>dbt Docs:</strong> It hosts the *persisted* <code>manifest.json</code> and <code>catalog.json</code> to show your documentation website.</li>
+                        </ul>
+                      </p>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+</body>
+</html>
