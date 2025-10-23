@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lab: dbt Exposures & Source Freshness</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+            --bs-success-light: #e6f7f0;
+            --bs-warning-light: #fffbeb;
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+        }
+
+        .hero-header-product {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Tabs Styling */
+        .nav-tabs .nav-link {
+            color: var(--bs-secondary);
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+            border-bottom-width: 3px;
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+        /* Accordion Styling */
+        .accordion-button {
+            font-weight: 500;
+        }
+        .accordion-button:not(.collapsed) {
+            background-color: var(--bs-primary-light);
+            color: var(--bs-primary);
+            box-shadow: none;
+        }
+        .accordion-button:focus {
+            box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25);
+        }
+
+        /* Code Block Styling */
+        .code-block {
+            background-color: var(--bs-dark-purple);
+            color: #f8f8f2;
+            padding: 1rem;
+            border-radius: 0.375rem;
+            overflow-x: auto;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 0.9em;
+        }
+        .code-block pre {
+            margin: 0;
+        }
+        .code-block .comment { color: #9a9a9a; }
+        .code-block .yaml-key { color: #66d9ef; }
+        .code-block .yaml-string { color: #e6db74; }
+        .code-block .sql-keyword { color: #f92672; }
+        .code-block .sql-function { color: #a6e22e; }
+        .code-block .sql-jinja { color: #fd971f; }
+        
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+        
+        .list-group-item h5 {
+            color: var(--bs-primary);
+        }
+        
+        .step-badge {
+            font-size: 0.9em;
+        }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header-product text-center">
+                <h1 class="display-4">Lab: dbt Exposures & Source Freshness</h1>
+                <p class="lead">Documenting Downstream Use Cases and Monitoring Data Timeliness with Snowflake</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            
+            <ul class="nav nav-tabs" id="labTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="tab-intro" data-bs-toggle="tab" data-bs-target="#tab-intro-pane" type="button" role="tab" aria-selected="true">
+                        <i class="bi bi-info-circle me-1"></i> Intro & Objectives
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-setup" data-bs-toggle="tab" data-bs-target="#tab-setup-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-tools me-1"></i> Lab Setup
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-freshness" data-bs-toggle="tab" data-bs-target="#tab-freshness-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-stopwatch me-1"></i> Sources & Freshness
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-exposures" data-bs-toggle="tab" data-bs-target="#tab-exposures-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-graph-up-arrow me-1"></i> Models & Exposures
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-testing" data-bs-toggle="tab" data-bs-target="#tab-testing-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-clipboard2-check me-1"></i> Running & Testing
+                    </button>
+                </li>
+                 <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="tab-cleanup" data-bs-toggle="tab" data-bs-target="#tab-cleanup-pane" type="button" role="tab" aria-selected="false">
+                        <i class="bi bi-trash3 me-1"></i> Cleanup
+                    </button>
+                </li>
+            </ul>
+
+            <div class="tab-content" id="labTabsContent">
+                
+                <div class="tab-pane fade show active" id="tab-intro-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Introduction</h3>
+                    <p class="lead">This lab guide walks you through setting up a dbt Core project with Snowflake, inserting sample data, and implementing **dbt exposures** and **source freshness** checks.</p>
+                    
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Objectives</h4>
+                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Set up a dbt Core project connected to Snowflake.</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Load sample data into Snowflake using dbt seeds.</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Define dbt sources and configure freshness checks to monitor data timeliness.</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Create basic dbt models (staging and marts).</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Define dbt exposures to represent and document downstream data consumers (like dashboards or reports).</li>
+                        <li class="list-group-item"><i class="bi bi-check-circle-fill text-success me-2"></i>Run dbt commands to validate source freshness and understand exposure dependencies through lineage.</li>
+                    </ul>
+                    
+                    <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Prerequisites</h4>
+                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item">Snowflake Account access with necessary privileges.</li>
+                        <li class="list-group-item">Python 3.8+ installed.</li>
+                        <li class="list-group-item">pip (Python package installer).</li>
+                        <li class="list-group-item">Git (optional but recommended).</li>
+                    </ul>
+                </div>
+                
+                <div class="tab-pane fade" id="tab-setup-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Lab Setup: Snowflake, dbt Core & Sample Data</h3>
+                    <p class="lead">Follow these steps to prepare your environment and load initial data.</p>
+                    
+                     <div class="alert alert-info mt-3">
+                        <i class="bi bi-info-circle-fill me-1"></i> If you already have dbt Core running with an active Snowflake connection, you can skip Steps 1 & 2 and adapt the database/schema names in later steps.
+                    </div>
+
+                    <div class="accordion" id="setupAccordion">
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#setup-1" aria-expanded="false" aria-controls="setup-1">
+                                    <span class="badge bg-primary rounded-pill me-2 step-badge">Step 1</span><strong>Snowflake Setup (Database, Warehouse, User)</strong>
+                                </button>
+                            </h2>
+                            <div id="setup-1" class="accordion-collapse collapse" data-bs-parent="#setupAccordion">
+                                <div class="accordion-body">
+                                    <p>Log in to Snowflake and run the following SQL to create necessary resources:</p>
+                                    <h6>1. Create Database & Schema:</h6>
+<div class="code-block"><pre><code class="language-sql">CREATE DATABASE DBT_LAB;
+USE DATABASE DBT_LAB;
+CREATE SCHEMA RAW;</code></pre></div>
+                                    <h6>2. Create Warehouse:</h6>
+<div class="code-block"><pre><code class="language-sql">CREATE WAREHOUSE DBT_LAB_WH 
+WITH 
+WAREHOUSE_SIZE = 'XSMALL' 
+AUTO_SUSPEND = 60 
+AUTO_RESUME = TRUE;</code></pre></div>
+                                    <h6>3. Create Role & Grant Privileges:</h6>
+<div class="code-block"><pre><code class="language-sql">CREATE ROLE DBT_ROLE;
+GRANT USAGE ON WAREHOUSE DBT_LAB_WH TO ROLE DBT_ROLE;
+GRANT USAGE ON DATABASE DBT_LAB TO ROLE DBT_ROLE;
+GRANT USAGE ON SCHEMA DBT_LAB.RAW TO ROLE DBT_ROLE;
+GRANT CREATE TABLE ON SCHEMA DBT_LAB.RAW TO ROLE DBT_ROLE; <span class="comment">-- For seeds</span>
+GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA DBT_LAB.RAW TO ROLE DBT_ROLE; <span class="comment">-- Simplify grants for lab</span>
+GRANT ALL PRIVILEGES ON FUTURE TABLES IN SCHEMA DBT_LAB.RAW TO ROLE DBT_ROLE;
+GRANT ALL PRIVILEGES ON ALL SCHEMAS IN DATABASE DBT_LAB TO ROLE DBT_ROLE; <span class="comment">-- Allows dbt to create analytics schema</span>
+GRANT ALL PRIVILEGES ON FUTURE SCHEMAS IN DATABASE DBT_LAB TO ROLE DBT_ROLE;</code></pre></div>
+                                     <h6>4. Create User & Assign Role:</h6>
+<div class="code-block"><pre><code class="language-sql"><span class="comment">-- Replace with your desired username and strong password</span>
+CREATE USER DBT_USER PASSWORD = 'your_strong_password_here' 
+DEFAULT_ROLE = DBT_ROLE
+DEFAULT_WAREHOUSE = DBT_LAB_WH
+DEFAULT_NAMESPACE = DBT_LAB.RAW;
+
+GRANT ROLE DBT_ROLE TO USER DBT_USER;</code></pre></div>
+                                    <p class="mt-3"><strong>Important:</strong> Remember the user credentials, database (<code>DBT_LAB</code>), schema (<code>RAW</code>), and warehouse (<code>DBT_LAB_WH</code>).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#setup-2" aria-expanded="false" aria-controls="setup-2">
+                                     <span class="badge bg-primary rounded-pill me-2 step-badge">Step 2</span><strong>dbt Core Setup (Installation & Project Init)</strong>
+                                </button>
+                            </h2>
+                            <div id="setup-2" class="accordion-collapse collapse" data-bs-parent="#setupAccordion">
+                                <div class="accordion-body">
+                                     <h6>1. Install dbt-snowflake Adapter:</h6>
+<div class="code-block"><pre><code class="language-bash">pip install dbt-snowflake</code></pre></div>
+                                     <h6>2. Initialize dbt Project:</h6>
+                                     <p>Navigate to your desired project directory in your terminal and run:</p>
+<div class="code-block"><pre><code class="language-bash">dbt init dbt_freshness_exposure_lab</code></pre></div>
+                                     <p>Follow the prompts, providing your Snowflake account details (account ID, user, password, role, warehouse, database). For the schema prompt, enter <code>ANALYTICS</code> (this will be the target schema where dbt builds models).</p>
+                                     <h6>3. Navigate into Project & Test Connection:</h6>
+<div class="code-block"><pre><code class="language-bash">cd dbt_freshness_exposure_lab
+dbt debug</code></pre></div>
+                                    <p>You should see <code>Connection test: OK</code>.</p>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="accordion-item">
+                            <h2 class="accordion-header">
+                                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#setup-3" aria-expanded="false" aria-controls="setup-3">
+                                     <span class="badge bg-primary rounded-pill me-2 step-badge">Step 3</span><strong>Load Sample Data (dbt Seeds)</strong>
+                                </button>
+                            </h2>
+                            <div id="setup-3" class="accordion-collapse collapse" data-bs-parent="#setupAccordion">
+                                <div class="accordion-body">
+                                    <p>We'll use CSV files (seeds) to load data into the <code>DBT_LAB.RAW</code> schema.</p>
+                                    <h6>1. Create CSV Files:</h6>
+                                    <p>Create a <code>seeds</code> directory in your project if it doesn't exist (`mkdir seeds`). Then, create the following files inside it:</p>
+                                    
+                                    <p><strong><code>seeds/customers.csv</code></strong></p>
+<div class="code-block"><pre><code class="language-csv">customer_id,first_name,last_name,email,signup_date
+1,Alice,Smith,alice.smith@example.com,2024-01-10 09:00:00
+2,Bob,Johnson,bob.j@example.com,2024-01-15 10:30:00
+3,Charlie,Brown,charlie.b@example.com,2024-02-01 11:45:00
+4,Diana,Prince,diana.p@example.com,2024-02-05 14:00:00
+5,Eve,Davis,eve.d@example.com,2024-03-01 08:15:00</code></pre></div>
+
+                                     <p><strong><code>seeds/orders.csv</code></strong></p>
+<div class="code-block"><pre><code class="language-csv">order_id,customer_id,order_date,amount
+101,1,2024-01-20 10:00:00,50.00
+102,2,2024-01-25 11:30:00,75.50
+103,1,2024-02-03 12:00:00,25.00
+104,3,2024-02-10 14:15:00,100.00
+105,4,2024-02-15 16:00:00,60.25
+106,1,2024-03-05 09:30:00,120.00
+107,5,2024-03-10 13:00:00,30.00</code></pre></div>
+
+                                     <p><strong><code>seeds/product_categories.csv</code></strong></p>
+<div class="code-block"><pre><code class="language-csv">category_id,category_name
+1,Electronics
+2,Books
+3,Clothing
+4,Home Goods</code></pre></div>
+
+                                     <h6>2. Run dbt seed:</h6>
+                                     <p>Execute this command in your terminal:</p>
+<div class="code-block"><pre><code class="language-bash">dbt seed</code></pre></div>
+                                    <p>This creates the <code>CUSTOMERS</code>, <code>ORDERS</code>, and <code>PRODUCT_CATEGORIES</code> tables in your <code>DBT_LAB.RAW</code> schema and loads the data.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="tab-pane fade" id="tab-freshness-pane" role="tabpanel" tabindex="0">
+                    <h3 class="mb-3">Defining Sources & Configuring Freshness</h3>
+                    <p class="lead">Now, let's tell dbt about our raw tables using sources and set up freshness checks to monitor their timeliness.</p>
+                    
+                    <h6>1. Create Source YAML File:</h6>
+                    <p>Create a file named <code>models/raw_data.yml</code> (or add to an existing <code>models/schema.yml</code>) with the following content:</p>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span>
+
+<span class="yaml-key">sources:</span>
+  - <span class="yaml-key">name:</span> <span class="yaml-string">raw_ecommerce</span>
+    <span class="yaml-key">database:</span> <span class="yaml-string">DBT_LAB</span>         <span class="comment"># Your Snowflake database</span>
+    <span class="yaml-key">schema:</span> <span class="yaml-string">RAW</span>             <span class="comment"># Your raw data schema</span>
+    
+    <span class="comment"># Default freshness for tables in this source</span>
+    <span class="yaml-key">freshness:</span>
+      <span class="yaml-key">warn_after:</span> {<span class="yaml-key">count:</span> 1, <span class="yaml-key">period:</span> day} <span class="comment"># Warn if > 1 day old</span>
+      <span class="yaml-key">error_after:</span> {<span class="yaml-key">count:</span> 2, <span class="yaml-key">period:</span> day} <span class="comment"># Error if > 2 days old</span>
+    <span class="yaml-key">loaded_at_field:</span> <span class="yaml-string">_loaded_at</span>      <span class="comment"># Column indicating load time</span>
+
+    <span class="yaml-key">tables:</span>
+      - <span class="yaml-key">name:</span> <span class="yaml-string">customers</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">Raw customer data.</span>
+        <span class="yaml-key">columns:</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">Unique identifier for the customer.</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">unique</span>
+              - <span class="yaml-string">not_null</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">signup_date</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">Date and time when the customer signed up.</span>
+
+      - <span class="yaml-key">name:</span> <span class="yaml-string">orders</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">Raw order data.</span>
+        <span class="yaml-key">columns:</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">order_id</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">Unique identifier for the order.</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">unique</span>
+              - <span class="yaml-string">not_null</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">customer_id</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">Foreign key to the customers table.</span>
+            <span class="yaml-key">tests:</span>
+              - <span class="yaml-string">not_null</span>
+              - <span class="yaml-key">relationships:</span>
+                  <span class="yaml-key">to:</span> <span class="yaml-string">source('raw_ecommerce', 'customers')</span>
+                  <span class="yaml-key">field:</span> <span class="yaml-string">customer_id</span>
+          - <span class="yaml-key">name:</span> <span class="yaml-string">order_date</span>
+            <span class="yaml-key">description:</span> <span class="yaml-string">Date and time when the order was placed.</span>
+            
+      - <span class="yaml-key">name:</span> <span class="yaml-string">product_categories</span>
+        <span class="yaml-key">description:</span> <span class="yaml-string">Static lookup table for product categories.</span>
+        <span class="comment"># Override freshness for this static table</span>
+        <span class="yaml-key">freshness:</span> {} <span class="comment"># No freshness check needed</span>
+        <span class="yaml-key">loaded_at_field:</span> null <span class="comment"># No loaded_at field</span>
+</code></pre></div>
+
+                    <h6 class="mt-4">Explanation of Freshness Configuration:</h6>
+                    <ul>
+                        <li><code>warn_after</code>: dbt issues a warning if the newest record (based on <code>loaded_at_field</code>) is older than this duration.</li>
+                        <li><code>error_after</code>: dbt issues an error if the newest record is older than this duration. Jobs might fail depending on configuration.</li>
+                        <li><code>loaded_at_field</code>: The timestamp column in your source table that dbt checks to determine the data's age.</li>
+                    </ul>
+
+                    <h6>2. Simulate <code>_loaded_at</code> Field:</h6>
+                     <div class="alert alert-warning mt-2">
+                        <strong>Note:</strong> Our seed CSVs don't have a <code>_loaded_at</code> field. In a real project, your ELT tool would populate this. We'll simulate it manually in Snowflake.
+                    </div>
+                    <p>Run this SQL in Snowflake:</p>
+<div class="code-block"><pre><code class="language-sql">ALTER TABLE DBT_LAB.RAW.CUSTOMERS ADD COLUMN _LOADED_AT TIMESTAMP_NTZ;
+UPDATE DBT_LAB.RAW.CUSTOMERS SET _LOADED_AT = CURRENT_TIMESTAMP();
+
+ALTER TABLE DBT_LAB.RAW.ORDERS ADD COLUMN _LOADED_AT TIMESTAMP_NTZ;
+UPDATE DBT_LAB.RAW.ORDERS SET _LOADED_AT = CURRENT_TIMESTAMP();</code></pre></div>
+
+                    <h6>3. Check Source Freshness:</h6>
+                    <p>Run the freshness check command in your terminal:</p>
+<div class="code-block"><pre><code class="language-bash">dbt source freshness</code></pre></div>
+                    <p>Initially, you should see <code>PASS</code> for customers and orders. The <code>product_categories</code> table will be skipped as freshness is disabled for it.</p>
+                     
+                    <h6>4. Test Freshness Thresholds (Optional Simulation):</h6>
+                    <p>To see warnings or errors without waiting, manually set the <code>_LOADED_AT</code> timestamp back in time:</p>
+                    <p><strong>To simulate a WARNING (> 1 day old):</strong></p>
+<div class="code-block"><pre><code class="language-sql">UPDATE DBT_LAB.RAW.CUSTOMERS SET _LOADED_AT = DATEADD(DAY, -1.1, CURRENT_TIMESTAMP());</code></pre></div>
+                    <p><strong>To simulate an ERROR (> 2 days old):</strong></p>
+<div class="code-block"><pre><code class="language-sql">UPDATE DBT_LAB.RAW.CUSTOMERS SET _LOADED_AT = DATEADD(DAY, -2.1, CURRENT_TIMESTAMP());</code></pre></div>
+                    <p>After running either UPDATE statement, run <code>dbt source freshness</code> again to see the corresponding status (<code>WARN</code> or <code>ERROR</code>).</p>
+
+                </div>
+
+                <div class="tab-pane fade" id="tab-exposures-pane" role="tabpanel" tabindex="0">
+                     <h3 class="mb-3">Creating dbt Models & Defining Exposures</h3>
+                     <p class="lead">Let's build models to transform the data and then define exposures to document how these models are used downstream.</p>
+
+                     <h6>1. Create dbt Models:</h6>
+                     <p>Create the following directories and SQL files in your <code>models/</code> directory:</p>
+                     <p><strong><code>models/staging/stg_customers.sql</code></strong></p>
+<div class="code-block"><pre><code class="language-sql">{{ config(materialized='view') }}
+
+SELECT
+    customer_id,
+    first_name,
+    last_name,
+    email,
+    signup_date
+FROM {{ source('raw_ecommerce', 'customers') }}</code></pre></div>
+
+                    <p><strong><code>models/staging/stg_orders.sql</code></strong></p>
+<div class="code-block"><pre><code class="language-sql">{{ config(materialized='view') }}
+
+SELECT
+    order_id,
+    customer_id,
+    order_date,
+    amount
+FROM {{ source('raw_ecommerce', 'orders') }}</code></pre></div>
+
+                     <p><strong><code>models/marts/fct_customer_orders.sql</code></strong></p>
+<div class="code-block"><pre><code class="language-sql">{{ config(materialized='table') }}
+
+WITH customers AS (
+    SELECT * FROM {{ ref('stg_customers') }}
+),
+
+orders AS (
+    SELECT * FROM {{ ref('stg_orders') }}
+)
+
+SELECT
+    o.order_id,
+    c.customer_id,
+    c.first_name,
+    c.last_name,
+    c.email,
+    o.order_date,
+    o.amount
+FROM orders o
+JOIN customers c ON o.customer_id = c.customer_id</code></pre></div>
+
+                    <h6>2. Run dbt Models:</h6>
+                    <p>Execute the run command:</p>
+<div class="code-block"><pre><code class="language-bash">dbt run</code></pre></div>
+                    <p>This creates the views and tables in your target schema (<code>DBT_LAB.ANALYTICS</code>).</p>
+
+                     <h6 class="mt-4">3. Define dbt Exposures:</h6>
+                     <p>Exposures document downstream uses of your models (dashboards, reports, etc.). Create a file named <code>models/exposures.yml</code>:</p>
+<div class="code-block"><pre><code class="language-yaml"><span class="yaml-key">version:</span> <span class="yaml-string">2</span>
+
+<span class="yaml-key">exposures:</span>
+  - <span class="yaml-key">name:</span> <span class="yaml-string">customer_lifetime_value_dashboard</span>
+    <span class="yaml-key">label:</span> <span class="yaml-string">"Customer Lifetime Value Dashboard"</span>
+    <span class="yaml-key">type:</span> <span class="yaml-string">dashboard</span>
+    <span class="yaml-key">maturity:</span> <span class="yaml-string">high</span>
+    <span class="yaml-key">url:</span> <span class="yaml-string">https://your-bi-tool.com/dashboards/clv_dashboard_id</span> <span class="comment"># Replace placeholder</span>
+    <span class="yaml-key">description:</span> <span class="yaml-string">|
+      This dashboard provides insights into customer lifetime value, 
+      segmentation, and purchasing patterns. Used by marketing and sales teams.</span>
+    <span class="yaml-key">depends_on:</span>
+      - <span class="yaml-string">ref('fct_customer_orders')</span>
+    <span class="yaml-key">owner:</span>
+      <span class="yaml-key">name:</span> <span class="yaml-string">Data Analytics Team</span>
+      <span class="yaml-key">email:</span> <span class="yaml-string">analytics@yourcompany.com</span>
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">daily_sales_report</span>
+    <span class="yaml-key">label:</span> <span class="yaml-string">"Daily Sales Report"</span>
+    <span class="yaml-key">type:</span> <span class="yaml-string">report</span>
+    <span class="yaml-key">maturity:</span> <span class="yaml-string">medium</span>
+    <span class="yaml-key">url:</span> <span class="yaml-string">https://your-reporting-tool.com/reports/daily_sales</span> <span class="comment"># Replace placeholder</span>
+    <span class="yaml-key">description:</span> <span class="yaml-string">|
+      A daily summary of sales performance, including total revenue and 
+      number of orders. Used by sales managers.</span>
+    <span class="yaml-key">depends_on:</span>
+      - <span class="yaml-string">ref('fct_customer_orders')</span>
+    <span class="yaml-key">owner:</span>
+      <span class="yaml-key">name:</span> <span class="yaml-string">Sales Operations</span>
+      <span class="yaml-key">email:</span> <span class="yaml-string">salesops@yourcompany.com</span>
+
+  - <span class="yaml-key">name:</span> <span class="yaml-string">customer_segmentation_notebook</span>
+    <span class="yaml-key">label:</span> <span class="yaml-string">"Customer Segmentation Analysis"</span>
+    <span class="yaml-key">type:</span> <span class="yaml-string">notebook</span>
+    <span class="yaml-key">maturity:</span> <span class="yaml-string">low</span>
+    <span class="yaml-key">url:</span> <span class="yaml-string">https://your-jupyter-notebook-server.com/notebooks/customer_segmentation.ipynb</span> <span class="comment"># Placeholder</span>
+    <span class="yaml-key">description:</span> <span class="yaml-string">|
+      Jupyter notebook for ad-hoc customer segmentation analysis. Used by data scientists.</span>
+    <span class="yaml-key">depends_on:</span>
+      - <span class="yaml-string">ref('fct_customer_orders')</span>
+      - <span class="yaml-string">source('raw_ecommerce', 'product_categories')</span> <span class="comment"># Can depend on sources too</span>
+    <span class="yaml-key">owner:</span>
+      <span class="yaml-key">name:</span> <span class="yaml-string">Data Science Team</span>
+      <span class="yaml-key">email:</span> <span class="yaml-string">datascience@yourcompany.com</span>
+</code></pre></div>
+
+                    <h6 class="mt-4">Explanation of Exposure Properties:</h6>
+                     <ul class="list-group list-group-flush">
+                        <li class="list-group-item"><code>name</code>: Unique identifier.</li>
+                        <li class="list-group-item"><code>label</code>: Human-friendly name.</li>
+                        <li class="list-group-item"><code>type</code>: Type of asset (dashboard, report, notebook, ml, application).</li>
+                        <li class="list-group-item"><code>maturity</code>: Stability (high, medium, low).</li>
+                        <li class="list-group-item"><code>url</code>: Link to the asset.</li>
+                        <li class="list-group-item"><code>description</code>: Purpose and context.</li>
+                        <li class="list-group-item"><code>depends_on</code>: Crucial for lineage - list of <code>ref('model')</code> or <code>source('src', 'tbl')</code> it uses.</li>
+                        <li class="list-group-item"><code>owner</code>: Contact info.</li>
+                    </ul>
+                </div>
+
+                <div class="tab-pane fade" id="tab-testing-pane" role="tabpanel" tabindex="0">
+                     <h3 class="mb-3">Running Commands & Testing Freshness Impact</h3>
+                     <p class="lead">Let's see how exposures appear in documentation and how freshness issues propagate through lineage.</p>
+
+                     <h6>1. View Exposures in dbt Docs:</h6>
+                     <p>Generate and serve the documentation:</p>
+<div class="code-block"><pre><code class="language-bash">dbt docs generate
+dbt docs serve</code></pre></div>
+                    <p>Open <code>http://localhost:8080</code> in your browser. Navigate to the "Exposures" section. Click on an exposure (e.g., <code>customer_lifetime_value_dashboard</code>) to see its details, owner, URL, and the crucial <strong>lineage graph</strong> showing which models it depends on.</p>
+
+                    <h6 class="mt-4">2. Explore Exposure-Related Commands:</h6>
+                    <p>You can use selectors to target models related to specific exposures:</p>
+                    <p><strong>List dependencies of an exposure:</strong></p>
+<div class="code-block"><pre><code class="language-bash">dbt ls --select exposure:customer_lifetime_value_dashboard</code></pre></div>
+                    
+                    <p><strong>Run models needed for an exposure (and its upstream dependencies):</strong></p>
+<div class="code-block"><pre><code class="language-bash">dbt run --select +exposure:customer_lifetime_value_dashboard</code></pre></div>
+
+                     <p><strong>Test models needed for an exposure (and its upstream dependencies):</strong></p>
+<div class="code-block"><pre><code class="language-bash">dbt test --select +exposure:customer_lifetime_value_dashboard</code></pre></div>
+                    <p>These commands are useful for targeted runs when updating a specific downstream asset.</p>
+
+                    <h6 class="mt-4">3. Test Freshness Impact:</h6>
+                    <p>Let's simulate stale source data again and see how it affects lineage.</p>
+                    <p><strong>Make <code>customers</code> data stale (Error > 2 days old):</strong></p>
+<div class="code-block"><pre><code class="language-sql">UPDATE DBT_LAB.RAW.CUSTOMERS SET _LOADED_AT = DATEADD(DAY, -2.5, CURRENT_TIMESTAMP());</code></pre></div>
+                    
+                    <p><strong>Check freshness (confirm error):</strong></p>
+<div class="code-block"><pre><code class="language-bash">dbt source freshness</code></pre></div>
+                    <p>You should see an <code>ERROR</code> status for <code>raw_ecommerce.customers</code>.</p>
+
+                    <p><strong>Observe impact in dbt Docs:</strong></p>
+                    <ol>
+                        <li>Re-generate and serve the docs:
+<div class="code-block"><pre><code class="language-bash">dbt docs generate
+dbt docs serve</code></pre></div>
+                        </li>
+                        <li>Open the docs site and view the Lineage Graph.</li>
+                        <li><strong>Observation:</strong> You should now see a visual indicator (like a red border or icon) on the <code>raw_ecommerce.customers</code> source node. This staleness indicator will propagate downstream to <code>stg_customers</code>, <code>fct_customer_orders</code>, and potentially even the exposures that depend on them.</li>
+                    </ol>
+                    <p>This demonstrates how freshness checks provide immediate visibility into data quality issues affecting the entire pipeline.</p>
+                    
+                    <p><strong>(Optional) Restore freshness:</strong></p>
+<div class="code-block"><pre><code class="language-sql">UPDATE DBT_LAB.RAW.CUSTOMERS SET _LOADED_AT = CURRENT_TIMESTAMP();</code></pre></div>
+                    <p>Then run <code>dbt source freshness</code> and <code>dbt docs generate</code> again to see the status return to <code>PASS</code>.</p>
+                </div>
+
+                 <div class="tab-pane fade" id="tab-cleanup-pane" role="tabpanel" tabindex="0">
+                     <h3 class="mb-3">Cleanup (Optional)</h3>
+                     <p class="lead">To remove the resources created during this lab.</p>
+
+                     <h6>1. Drop Snowflake Objects:</h6>
+                     <p>Run the following SQL in Snowflake:</p>
+<div class="code-block"><pre><code class="language-sql">DROP DATABASE DBT_LAB;
+DROP USER DBT_USER; 
+DROP ROLE DBT_ROLE;
+<span class="comment">-- Optionally drop the warehouse if you created it just for this lab</span>
+<span class="comment">-- DROP WAREHOUSE DBT_LAB_WH;</span></code></pre></div>
+
+                    <h6 class="mt-4">2. Delete dbt Project Directory:</h6>
+                    <p>In your terminal, navigate *outside* the project directory and remove it:</p>
+<div class="code-block"><pre><code class="language-bash">cd ..
+rm -rf dbt_freshness_exposure_lab</code></pre></div>
+
+                     <hr>
+                     <p class="mt-4">By integrating exposures and freshness into your dbt workflows, you can significantly improve data governance, ensure data quality, and provide better visibility into the health and impact of your data transformations.</p>
+                </div>
+
+            </div> </div> </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
