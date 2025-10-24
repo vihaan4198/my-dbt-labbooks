@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>dbt Training Labs - Main Menu</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+            --navbar-height: 56px; 
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-top: var(--navbar-height); 
+        }
+        
+        .navbar-main {
+             position: fixed;
+             top: 0;
+             width: 100%;
+             z-index: 1030; 
+        }
+
+        .main-content {
+            flex: 1;
+            margin-top: 1rem; 
+        }
+
+        .hero-header-landing {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 3rem 2rem; /* Slightly smaller padding */
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Card Tile Styling */
+         .lab-card {
+             transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+             height: 100%; /* Make cards in a row equal height */
+         }
+         .lab-card:hover {
+             transform: translateY(-5px);
+             box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+         }
+         .lab-card .card-body {
+             display: flex;
+             flex-direction: column;
+             justify-content: space-between; /* Push button down */
+         }
+         .lab-card .card-title {
+             color: var(--bs-primary);
+             font-weight: 600;
+         }
+         .lab-card .card-icon {
+             font-size: 2.5rem;
+             color: var(--bs-secondary);
+             margin-bottom: 0.75rem;
+         }
+         .lab-card a.stretched-link::after {
+             position: absolute;
+             top: 0;
+             right: 0;
+             bottom: 0;
+             left: 0;
+             z-index: 1;
+             content: "";
+         }
+
+        /* Footer Styling */
+        .site-footer {
+            background-color: var(--bs-footer-dark);
+            color: #ccc;
+            padding: 2rem 0;
+            margin-top: 3rem;
+        }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-main" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+            <span class="navbar-text ms-auto text-light">
+                dbt Training Portal
+            </span>
+        </div>
+    </nav>
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header-landing text-center">
+                <h1 class="display-5">dbt Training Labs & Demos</h1>
+                <p class="lead">Select a module below to begin.</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            <div class="row row-cols-1 row-cols-sm-2 row-cols-md-3 row-cols-lg-4 g-4">
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <i class="bi bi-mortarboard-fill card-icon"></i>
+                                <h5 class="card-title">Capstone Project</h5>
+                                <p class="card-text small text-muted">Integrate your skills in a final project.</p>
+                            </div>
+                            <a href="capston-project.html" class="stretched-link" aria-label="Go to Capstone Project"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                     <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <i class="bi bi-copy card-icon"></i>
+                                <h5 class="card-title">dbt Clone</h5>
+                                <p class="card-text small text-muted">Demo and docs for the dbt clone command.</p>
+                             </div>
+                            <a href="dbt-clone-doc.html" class="stretched-link" aria-label="Go to dbt Clone Docs"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-journal-check card-icon"></i>
+                                <h5 class="card-title">dbt Contracts Lab</h5>
+                                <p class="card-text small text-muted">Hands-on lab for model contracts.</p>
+                            </div>
+                            <a href="dbt-contracts-lab.html" class="stretched-link" aria-label="Go to dbt Contracts Lab"></a>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-bug-fill card-icon"></i>
+                                <h5 class="card-title">Error Debugging</h5>
+                                <p class="card-text small text-muted">Guide to debugging common dbt errors.</p>
+                            </div>
+                           <a href="dbt-error-debug.html" class="stretched-link" aria-label="Go to Error Debugging"></a>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-exclamation-triangle-fill card-icon"></i>
+                                <h5 class="card-title">Error Handling Labs</h5>
+                                <p class="card-text small text-muted">Practical labs for fixing dbt errors.</p>
+                            </div>
+                           <a href="dbt-error-labs.html" class="stretched-link" aria-label="Go to Error Handling Labs"></a>
+                        </div>
+                    </div>
+                </div>
+
+                 <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-gear-wide-connected card-icon"></i>
+                                <h5 class="card-title">dbt Jobs Demo</h5>
+                                <p class="card-text small text-muted">Interactive demo explaining dbt Jobs.</p>
+                            </div>
+                           <a href="dbt-jobs-demo.html" class="stretched-link" aria-label="Go to dbt Jobs Demo"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-play-circle-fill card-icon"></i>
+                                <h5 class="card-title">dbt Jobs Lab</h5>
+                                <p class="card-text small text-muted">Hands-on lab for creating dbt Cloud Jobs.</p>
+                            </div>
+                            <a href="dbt-jobs-lab.html" class="stretched-link" aria-label="Go to dbt Jobs Lab"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-patch-question-fill card-icon"></i>
+                                <h5 class="card-title">dbt Jobs Quiz</h5>
+                                <p class="card-text small text-muted">Knowledge check on dbt Jobs concepts.</p>
+                            </div>
+                           <a href="dbt-jobs-quiz.html" class="stretched-link" aria-label="Go to dbt Jobs Quiz"></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <i class="bi bi-braces card-icon"></i>
+                                <h5 class="card-title">dbt Lab 2 (Generic)</h5>
+                                <p class="card-text small text-muted">Another hands-on dbt lab exercise.</p>
+                            </div>
+                           <a href="dbt-lab2.html" class="stretched-link" aria-label="Go to dbt Lab 2"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-shield-lock-fill card-icon"></i>
+                                <h5 class="card-title">Model Governance</h5>
+                                <p class="card-text small text-muted">Concepts related to dbt model governance.</p>
+                            </div>
+                           <a href="dbt-model-gov.html" class="stretched-link" aria-label="Go to Model Governance"></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <i class="bi bi-app-indicator card-icon"></i>
+                                <h5 class="card-title">Comprehensive Project Lab</h5>
+                                <p class="card-text small text-muted">Full project build with monitoring & quiz.</p>
+                            </div>
+                           <a href="dbt-project-live.html" class="stretched-link" aria-label="Go to Comprehensive Project Lab"></a>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                            <div>
+                                <i class="bi bi-stopwatch-fill card-icon"></i>
+                                <h5 class="card-title">Source Freshness Lab</h5>
+                                <p class="card-text small text-muted">Lab focused on exposures & freshness.</p>
+                            </div>
+                           <a href="dbt-source-fresh.html" class="stretched-link" aria-label="Go to Source Freshness Lab"></a>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col">
+                    <div class="card lab-card text-center h-100 shadow-sm">
+                        <div class="card-body">
+                             <div>
+                                <i class="bi bi-collection-fill card-icon"></i>
+                                <h5 class="card-title">Quizzlet (Generic)</h5>
+                                <p class="card-text small text-muted">A general quiz page.</p>
+                            </div>
+                           <a href="quizzlet.html" class="stretched-link" aria-label="Go to Quizzlet"></a>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div> </div> </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+</body>
+</html>
