@@ -1,0 +1,1312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comprehensive Sample dbt Project Lab</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    
+    <style>
+        :root {
+            --bs-primary: #6f42c1; /* Purple */
+            --bs-primary-rgb: 111, 66, 193;
+            --bs-primary-light: #f4f0ff;
+            --bs-secondary: #0d6efd; /* Blue */
+            --bs-info: #0dcaf0;
+            --bs-info-rgb: 13, 202, 240;
+            --bs-info-light: #ebfaff;
+            --bs-body-bg: #fafbff;
+            --bs-dark-purple: #301934;
+            --bs-footer-dark: #2c2f33;
+            --timer-bar-height: 45px; 
+            --navbar-height: 56px; 
+            --highlight-color: #f2a5ec; /* Yellowish highlight */
+        }
+
+        body {
+            background-color: var(--bs-body-bg);
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+            padding-top: calc(var(--navbar-height) + var(--timer-bar-height)); 
+        }
+        
+        .navbar-main {
+             position: fixed;
+             top: 0;
+             width: 100%;
+             z-index: 1030; 
+        }
+
+        .top-info-bar {
+            position: fixed;
+            top: var(--navbar-height); 
+            width: 100%;
+            height: var(--timer-bar-height);
+            background-color: var(--bs-info-light);
+            color: var(--bs-dark-purple);
+            display: flex;
+            align-items: center;
+            justify-content: space-between; 
+            padding: 0 1rem; 
+            z-index: 1029; 
+            border-bottom: 1px solid rgba(var(--bs-info-rgb), 0.3);
+            font-weight: 500;
+            font-size: 0.9em;
+            flex-wrap: wrap; 
+        }
+        .top-info-bar > div {
+            display: flex;
+            align-items: center;
+            margin: 0.25rem 0.5rem; 
+        }
+         .top-info-bar .bi {
+             margin-right: 0.4rem;
+             font-size: 1.1em;
+         }
+        
+        /* Circular Progress */
+        .progress-circle {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: conic-gradient(var(--bs-primary) calc(var(--progress-percent, 0) * 1%), #dee2e6 calc(var(--progress-percent, 0) * 1%));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative; 
+            margin-left: 0.5rem; 
+        }
+        .progress-circle::before {
+            content: '';
+            position: absolute;
+            width: 22px; 
+            height: 22px;
+            background-color: var(--bs-info-light); 
+            border-radius: 50%;
+        }
+        .progress-circle span {
+            position: relative; 
+            font-size: 0.7em;
+            font-weight: bold;
+            color: var(--bs-primary);
+        }
+
+        .main-content {
+            flex: 1;
+            margin-top: 1rem; 
+        }
+
+        .hero-header {
+            background: linear-gradient(135deg, var(--bs-primary), var(--bs-secondary));
+            color: white;
+            padding: 4rem 2rem;
+            margin-bottom: 3rem;
+            border-radius: 0.5rem;
+        }
+
+        /* Tabs Styling */
+        .nav-tabs .nav-link {
+            color: var(--bs-secondary);
+            font-weight: 500;
+        }
+        .nav-tabs .nav-link.active {
+            color: var(--bs-primary);
+            border-color: var(--bs-primary) var(--bs-primary) #fff;
+            border-bottom-width: 3px;
+        }
+        .tab-content {
+            border: 1px solid #dee2e6;
+            border-top: 0;
+            padding: 2rem;
+            background-color: #fff;
+            border-radius: 0 0 0.375rem 0.375rem;
+        }
+
+        /* Accordion Styling */
+        .accordion-button { font-weight: 500; }
+        .accordion-button:not(.collapsed) { background-color: var(--bs-primary-light); color: var(--bs-primary); box-shadow: none; }
+        .accordion-button:focus { box-shadow: 0 0 0 0.25rem rgba(var(--bs-primary-rgb), 0.25); }
+
+        /* Code Block Styling */
+        .code-block { background-color: var(--bs-dark-purple); color: #f8f8f2; padding: 1rem; border-radius: 0.375rem; overflow-x: auto; font-family: 'Courier New', Courier, monospace; font-size: 0.9em; }
+        .code-block pre { margin: 0; }
+        .code-block .comment { color: #9a9a9a; }
+        .code-block .yaml-key { color: #66d9ef; }
+        .code-block .yaml-string { color: #e6db74; }
+        .code-block .sql-keyword { color: #f92672; }
+        .code-block .sql-function { color: #a6e22e; }
+        .code-block .sql-jinja { color: #fd971f; }
+
+        /* Custom Alert */
+        .alert-primary { background-color: var(--bs-primary-light); border-color: rgba(var(--bs-primary-rgb), 0.3); color: var(--bs-primary); }
+        .alert-primary .alert-heading { color: inherit; }
+        
+        /* Explanation Box */
+        .explanation { background-color: #fdfdff; border-left: 4px solid var(--bs-secondary); padding: 1rem; margin-top: 1rem; border-radius: 0.25rem; font-size: 0.95em; }
+         .explanation h6 { color: var(--bs-primary); font-weight: bold; }
+        
+        /* Footer Styling */
+        .site-footer { background-color: var(--bs-footer-dark); color: #ccc; padding: 2rem 0; margin-top: 3rem; }
+        .site-footer p { margin-bottom: 0.5rem; }
+        .site-footer strong { color: white; }
+        .site-footer a { color: var(--bs-info); text-decoration: none; }
+        .site-footer a:hover { color: white; }
+        
+        .list-group-item h5 { color: var(--bs-primary); }
+        .step-badge { font-size: 0.9em; }
+        
+        /* Checklist Styling */
+        .checklist .form-check { margin-bottom: 0.75rem; padding-left: 2em; }
+         .checklist .form-check-input { margin-top: 0.2em; margin-left: -2em; }
+        .checklist label { display: block; }
+        .checklist ul { list-style: disc; padding-left: 20px; margin-top: 0.5rem; }
+
+        /* Nested Tabs Styling */
+         .nav-pills .nav-link { background-color: var(--bs-primary-light); color: var(--bs-primary); margin-right: 0.5rem; margin-bottom: 0.5rem; font-weight: 500; }
+         .nav-pills .nav-link.active { background-color: var(--bs-primary); color: white; }
+         .nested-tab-content { padding-top: 1rem; }
+
+         /* Text Highlighter */
+         .text-highlight { background-color: var(--highlight-color); padding: 0.1em 0.3em; border-radius: 3px; font-weight: bold; }
+
+         /* Quiz Styles */
+         .quiz-question { margin-bottom: 1.5rem; }
+         .quiz-question .form-check { margin-bottom: 0.5rem; }
+
+         /* Hide lab content initially */
+         #labContentContainer { display: none; }
+
+    </style>
+</head>
+<body>
+
+    <nav class="navbar navbar-expand-lg navbar-dark navbar-main" style="background-color: var(--bs-dark-purple);">
+        <div class="container">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>
+                Learn with Vikash
+            </a>
+        </div>
+    </nav>
+
+     <div class="top-info-bar">
+        <div><i class="bi bi-mortarboard-fill text-primary"></i> DBT Certification Training</div>
+        <div><i class="bi bi-people-fill text-primary"></i> Batch EY#B2-2025</div>
+        <div><i class="bi bi-calendar-event text-primary"></i> <span id="current-date">--/--/----</span></div>
+        <div class="ms-auto d-flex align-items-center"> 
+            <div><i class="bi bi-stopwatch text-danger"></i> Time Remaining: <span id="countdown-timer">--:--</span></div>
+            <div class="d-flex align-items-center ms-3"> 
+                Lab Progress: 
+                <div class="progress-circle" id="progress-circle" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">
+                    <span id="progress-text">0%</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="main-content">
+        <div class="container">
+            <div class="hero-header text-center">
+                <h1 class="display-4">Comprehensive Sample dbt Project Lab</h1>
+                <p class="lead">Transforming E-Commerce Data with dbt</p>
+            </div>
+        </div>
+
+        <div class="container mb-5">
+            
+            <form id="labStartForm" class="mb-4 p-4 border rounded bg-light needs-validation" novalidate>
+                 <h3 class="mb-3 text-primary"><i class="bi bi-person-check-fill me-2"></i>Start Your Lab Session</h3>
+                 <p>Please enter your details to begin the lab and enable progress tracking.</p>
+                 <div class="mb-3">
+                     <label for="labUserName" class="form-label">Name:</label>
+                     <input type="text" class="form-control" id="labUserName" required>
+                      <div class="invalid-feedback">Please enter your name.</div>
+                 </div>
+                 <div class="mb-3">
+                     <label for="labUserEmail" class="form-label">Email:</label>
+                     <input type="email" class="form-control" id="labUserEmail" required>
+                      <div class="invalid-feedback">Please enter a valid email address.</div>
+                 </div>
+                 <button type="button" id="startLabBtn" class="btn btn-primary btn-lg track-click" data-click-id="start-lab">Start Lab</button>
+             </form>
+
+             <div id="labContentContainer">
+                 <ul class="nav nav-tabs" id="labTabs" role="tablist">
+                     <li class="nav-item" role="presentation">
+                        <button class="nav-link active track-click" id="tab-overview" data-bs-toggle="tab" data-bs-target="#tab-overview-pane" type="button" role="tab" aria-selected="true" data-click-id="tab-overview">
+                            <i class="bi bi-info-circle me-1"></i> Project Overview
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link track-click" id="tab-setup" data-bs-toggle="tab" data-bs-target="#tab-setup-pane" type="button" role="tab" aria-selected="false" data-click-id="tab-setup">
+                            <i class="bi bi-tools me-1"></i> Lab Setup
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link track-click" id="tab-build" data-bs-toggle="tab" data-bs-target="#tab-build-pane" type="button" role="tab" aria-selected="false" data-click-id="tab-build">
+                            <i class="bi bi-folder2-open me-1"></i> Building the Project (Tasks)
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link track-click" id="tab-deploy" data-bs-toggle="tab" data-bs-target="#tab-deploy-pane" type="button" role="tab" aria-selected="false" data-click-id="tab-deploy">
+                            <i class="bi bi-play-circle me-1"></i> Deployment & Execution
+                        </button>
+                    </li>
+                     <li class="nav-item" role="presentation">
+                        <button class="nav-link track-click" id="tab-docs" data-bs-toggle="tab" data-bs-target="#tab-docs-pane" type="button" role="tab" aria-selected="false" data-click-id="tab-docs">
+                            <i class="bi bi-search me-1"></i> Documentation Exploration
+                        </button>
+                    </li>
+                     <li class="nav-item" role="presentation">
+                        <button class="nav-link track-click" id="tab-quiz" data-bs-toggle="tab" data-bs-target="#tab-quiz-pane" type="button" role="tab" aria-selected="false" data-click-id="tab-quiz">
+                            <i class="bi bi-check2-square me-1"></i> Quiz & Certificate
+                        </button>
+                    </li>
+                </ul>
+
+
+                 <div class="tab-content" id="labTabsContent">
+                    
+                    <div class="tab-pane fade show active" id="tab-overview-pane" role="tabpanel" tabindex="0">
+                         <h3 class="mb-3">Project Overview</h3>
+                        <div class="alert alert-primary" role="alert">
+                            <h4 class="alert-heading">Project Goal & Importance</h4>
+                            <p>The primary goal is to <span class="text-highlight">transform raw e-commerce data</span> (customers, orders, payments) into a clean, aggregated format suitable for analytics and reporting.</p>
+                            <hr>
+                            <p>Completing this lab project is <span class="text-highlight">crucial</span> for several reasons:</p>
+                            <ul>
+                                <li><i class="bi bi-tools me-1"></i><span class="text-highlight">Hands-On Practice:</span> It provides practical experience implementing core dbt concepts in a realistic scenario.</li>
+                                <li><i class="bi bi-award-fill me-1"></i><span class="text-highlight">Certification Preparation:</span> This project covers a <span class="text-highlight">wide range of topics</span> directly relevant to the dbt Analytics Engineering Certification exam, including project configuration, testing, documentation, sources, layering, exposures, and more. Mastering this project significantly boosts your exam readiness.</li>
+                                <li><i class="bi bi-lightbulb-fill me-1"></i><span class="text-highlight">Demonstrates Core Skills:</span> Successfully building this project showcases your ability to structure a dbt project effectively, write modular SQL, implement data quality checks, and document your work – essential skills for any data analyst or engineer using dbt.</li>
+                            </ul>
+                            <p class="mb-0">Think of this not just as an exercise, but as building a miniature, real-world analytics pipeline. <span class="text-highlight">Your success hinges on understanding and implementing each component.</span></p>
+                        </div>
+
+                        <h4 class="mt-4 mb-3" style="color: var(--bs-primary);">Features Covered</h4>
+                        <ul class="list-group list-group-flush">
+                            <li class="list-group-item"><span class="text-highlight">Project Configuration</span> (<code>dbt_project.yml</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Packages</span> (<code>packages.yml</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Seeds</span> (<code>data/</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Macros</span> (<code>macros/</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Sources</span> (<code>models/sources.yml</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Multi-Layered Models</span> (Staging, Intermediate, Marts)</li>
+                            <li class="list-group-item"><span class="text-highlight">Exposures</span> (<code>models/exposures.yml</code>)</li>
+                            <li class="list-group-item"><span class="text-highlight">Metrics</span> (<code>models/metrics.yml</code>)</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="tab-setup-pane" role="tabpanel" tabindex="0">
+                        <h3 class="mb-3">Lab Setup Instructions</h3>
+                        <p>Follow these steps to set up the dbt project environment.</p>
+
+                        <div class="list-group">
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between"><h5>1. Create Project Directory</h5><span class="badge bg-primary rounded-pill step-badge">Step 1</span></div>
+                                <p class="mb-1">Create an empty folder: <code>ecom_analytics</code>.</p>
+                            </div>
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between"><h5>2. Prepare Data Warehouse</h5><span class="badge bg-primary rounded-pill step-badge">Step 2</span></div>
+                                <p class="mb-1">Create dummy raw tables. See <span class="text-highlight">Task 3</span> in the "Building the Project" tab for SQL.</p>
+                                <div class="alert alert-warning mt-2">Replace <code>your_database.your_schema</code>.</div>
+                            </div>
+                            <div class="list-group-item list-group-item-action">
+                                <div class="d-flex w-100 justify-content-between"><h5>3. Configure <code>profiles.yml</code> (Local dbt Core Users ONLY)</h5><span class="badge bg-primary rounded-pill step-badge">Step 3</span></div>
+                                <p class="mb-1">Set up <code>~/.dbt/profiles.yml</code> if using dbt Core locally.</p>
+                                <p class="mb-1"><small><strong>dbt Cloud Users:</strong> Skip this.</small></p>
+                                <div class="code-block"><pre><code class="language-yaml"># ~/.dbt/profiles.yml (Example)
+ecom_analytics:
+  target: dev
+  outputs:
+    dev:
+      type: [warehouse_type]
+      account: [account_id]
+      user: [user]
+      password: [password]
+      role: [role]
+      warehouse: [warehouse]
+      database: [database]
+      schema: [dev_schema] 
+      threads: 4</code></pre></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="tab-pane fade" id="tab-build-pane" role="tabpanel" aria-labelledby="tab-build" tabindex="0">
+                        <h3 class="mb-3">Building the Project (Tasks)</h3>
+                        <p>Create the project structure and files step-by-step. Click each task accordion, then click the file accordions within to see the code.</p>
+
+                        <div class="accordion" id="buildTasksAccordion">
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task1" aria-expanded="true" aria-controls="task1" data-click-id="task1-core">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 1</span>Set up Core Project Files
+                                    </button>
+                                </h2>
+                                <div id="task1" class="accordion-collapse collapse show" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create in <code>ecom_analytics/</code> root:</p>
+                                        <div class="accordion accordion-flush" id="task1Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t1f1" data-click-id="file-dbt-proj"><code>dbt_project.yml</code></button></h2><div id="t1f1" class="accordion-collapse collapse" data-bs-parent="#task1Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># dbt_project.yml
+name: 'ecom_analytics'
+version: '1.0.0'
+config-version: 2
+profile: 'ecom_analytics'
+model-paths: ["models"]
+seed-paths: ["data"]
+snapshot-paths: ["snapshots"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+analysis-paths: ["analyses"]
+clean-targets: ["target", "dbt_packages", "logs"]
+vars:
+  project_start_date: '2023-01-01'
+models:
+  ecom_analytics: 
+    +materialized: view
+    staging:
+      +materialized: ephemeral
+      +schema: raw_stage
+      description: "Staging layer for raw data, focusing on minimal cleaning and standardization."
+    intermediate:
+      +materialized: ephemeral
+      +schema: int_stage
+      description: "Intermediate layer for joining and transforming staging data, not directly consumed by BI."
+    marts:
+      +materialized: table
+      +schema: analytics
+      description: "Marts layer for business-friendly, aggregated, and highly curated data for analytics."
+      +tags: ['analytics_ready']
+      fact_orders:
+        +tags: ['daily_refresh', 'sales'] 
+        +docs: {node_color: "#82a170"}
+      dim_customers:
+        +tags: ['daily_refresh', 'customer'] 
+        +docs: {node_color: "#6b8e23"}
+on-run-end:
+  - "{{ log('dbt run completed successfully for target.name environment at ' ~ run_started_at, info=True) }}"
+  - "{{ dbt_utils.log_info(target.name~' build finished. Total models: ' ~ results | length) }}"</code></pre></div> <div class="explanation">Sets up project structure, materializations, schemas, tags, variables, and hooks.</div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t1f2" data-click-id="file-packages"><code>packages.yml</code></button></h2><div id="t1f2" class="accordion-collapse collapse" data-bs-parent="#task1Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># packages.yml
+packages:
+  - package: dbt-labs/dbt_utils
+    version: 1.1.1 
+  - package: dbt-labs/dbt_expectations
+    version: 0.10.0</code></pre></div> <div class="explanation">Specifies external packages needed.</div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task2" aria-expanded="false" aria-controls="task2" data-click-id="task2-seedmacro">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 2</span>Add Seeds and Macros
+                                    </button>
+                                </h2>
+                                <div id="task2" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create <code>data/</code> and <code>macros/</code> directories and files:</p>
+                                        <div class="accordion accordion-flush" id="task2Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t2f1" data-click-id="file-seed-csv"><code>data/product_categories.csv</code></button></h2><div id="t2f1" class="accordion-collapse collapse" data-bs-parent="#task2Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-csv">category_id,category_name,is_active,last_updated_at
+1,Electronics,TRUE,2024-01-01
+2,Books,TRUE,2024-01-05
+3,Apparel,TRUE,2024-01-10
+4,Home Goods,FALSE,2024-01-15
+5,Sports & Outdoors,TRUE,2024-01-20</code></pre></div> <div class="explanation">Static lookup data.</div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t2f2" data-click-id="file-macro-ts"><code>macros/get_current_timestamp.sql</code></button></h2><div id="t2f2" class="accordion-collapse collapse" data-bs-parent="#task2Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">{% macro get_current_timestamp() %} CURRENT_TIMESTAMP() {% endmacro %}</code></pre></div> <div class="explanation">Utility macro.</div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t2f3" data-click-id="file-macro-test"><code>macros/test_is_positive_number.sql</code></button></h2><div id="t2f3" class="accordion-collapse collapse" data-bs-parent="#task2Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">{% test is_positive_number(model, column_name) %} SELECT {{ column_name }} FROM {{ model }} WHERE {{ column_name }} <= 0 {% endtest %}</code></pre></div> <div class="explanation">Custom generic test.</div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t2f4" data-click-id="file-macro-schema"><code>macros/schema.yml</code></button></h2><div id="t2f4" class="accordion-collapse collapse" data-bs-parent="#task2Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml">version: 2
+macros:
+  - name: get_current_timestamp { description: "..." }
+  - name: is_positive_number { description: "...", arguments: [...] }</code></pre></div> <div class="explanation">Documentation for macros.</div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task3" aria-expanded="false" aria-controls="task3" data-click-id="task3-sources">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 3</span>Define Sources
+                                    </button>
+                                </h2>
+                                <div id="task3" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create <code>models/sources.yml</code>:</p>
+                                        <div class="alert alert-warning mt-2">Replace <code>your_database</code>/<code>your_schema</code>.</div>
+                                        <div class="code-block"><pre><code class="language-yaml"># models/sources.yml
+version: 2
+sources:
+  - name: raw_ecommerce_data
+    database: your_database 
+    schema: your_schema 
+    description: "Contains raw, untransformed data..."
+    tables:
+      - name: raw_customers
+        description: "Raw customer demographic..."
+        loaded_at_field: updated_at 
+        freshness: { warn_after: {count: 24, period: hour}, error_after: {count: 48, period: hour} }
+        columns:
+          - name: customer_id { description: "...", tests: [unique, not_null] }
+          - name: email { description: "...", tags: ['pii'], tests: [not_null] }
+          - name: registration_date { description: "..." }
+      - name: raw_orders
+        description: "Raw transactional data..."
+        loaded_at_field: order_date 
+        freshness: { warn_after: {count: 1, period: day}, error_after: {count: 2, period: day} }
+        columns:
+          - name: order_id { description: "...", tests: [unique, not_null] }
+          - name: customer_id { description: "...", tests: [not_null, { relationships: {...} }] }
+          - name: amount { description: "...", tests: [{ dbt_expectations...between... }] }
+      - name: raw_payments
+        description: "Raw payment details..."
+        loaded_at_field: payment_date
+        freshness: { warn_after: {count: 6, period: hour}, error_after: {count: 12, period: hour} }
+        columns:
+          - name: payment_id { description: "...", tests: [unique, not_null] }
+          - name: order_id { description: "...", tests: [not_null, { relationships: {...} }] }
+          - name: payment_method { description: "...", tests: [{ accepted_values: {...} }] }
+          - name: amount { description: "...", tests: [is_positive_number] }
+</code></pre></div>
+                                        <div class="explanation">Defines raw tables, applies tests, sets freshness.</div>
+                                        <p class="mt-3"><strong>Raw Data SQL (Needed for Setup Tab Step 2):</strong></p>
+                                        <div class="accordion accordion-flush mt-3" id="sqlSetupAccordionInner">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#sql-1i" data-click-id="sql-cust"><code>raw_customers</code> DDL & INSERT</button></h2><div id="sql-1i" class="accordion-collapse collapse" data-bs-parent="#sqlSetupAccordionInner"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">CREATE OR REPLACE TABLE your_database.your_schema.raw_customers (...); INSERT INTO ... VALUES (...);</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#sql-2i" data-click-id="sql-ord"><code>raw_orders</code> DDL & INSERT</button></h2><div id="sql-2i" class="accordion-collapse collapse" data-bs-parent="#sqlSetupAccordionInner"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">CREATE OR REPLACE TABLE your_database.your_schema.raw_orders (...); INSERT INTO ... VALUES (...);</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#sql-3i" data-click-id="sql-pay"><code>raw_payments</code> DDL & INSERT</button></h2><div id="sql-3i" class="accordion-collapse collapse" data-bs-parent="#sqlSetupAccordionInner"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">CREATE OR REPLACE TABLE your_database.your_schema.raw_payments (...); INSERT INTO ... VALUES (...);</code></pre></div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task4" aria-expanded="false" aria-controls="task4" data-click-id="task4-staging">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 4</span>Build Staging Layer
+                                    </button>
+                                </h2>
+                                <div id="task4" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create <code>models/staging/</code> and files:</p>
+                                        <div class="accordion accordion-flush" id="task4Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t4f1" data-click-id="file-stage-schema"><code>staging_schema.yml</code></button></h2><div id="t4f1" class="accordion-collapse collapse" data-bs-parent="#task4Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># models/staging/staging_schema.yml
+version: 2
+models:
+  - name: stg_customers { description: "...", columns: [...] }
+  - name: stg_orders { description: "...", columns: [...] }
+  - name: stg_payments { description: "...", columns: [...] }</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t4f2" data-click-id="file-stage-cust"><code>stg_customers.sql</code></button></h2><div id="t4f2" class="accordion-collapse collapse" data-bs-parent="#task4Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/staging/stg_customers.sql
+SELECT customer_id, first_name, last_name, LOWER(email) AS email, registration_date, updated_at 
+FROM {{ source('raw_ecommerce_data', 'raw_customers') }} WHERE customer_id IS NOT NULL</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t4f3" data-click-id="file-stage-ord"><code>stg_orders.sql</code></button></h2><div id="t4f3" class="accordion-collapse collapse" data-bs-parent="#task4Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/staging/stg_orders.sql
+SELECT order_id, customer_id, order_date, order_status, amount AS order_total_amount 
+FROM {{ source('raw_ecommerce_data', 'raw_orders') }} WHERE order_id IS NOT NULL</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t4f4" data-click-id="file-stage-pay"><code>stg_payments.sql</code></button></h2><div id="t4f4" class="accordion-collapse collapse" data-bs-parent="#task4Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/staging/stg_payments.sql
+SELECT payment_id, order_id, payment_method, amount AS payment_amount, payment_date, status AS payment_status 
+FROM {{ source('raw_ecommerce_data', 'raw_payments') }} WHERE payment_id IS NOT NULL</code></pre></div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task5" aria-expanded="false" aria-controls="task5" data-click-id="task5-int">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 5</span>Build Intermediate Layer
+                                    </button>
+                                </h2>
+                                <div id="task5" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create <code>models/intermediate/</code> and files:</p>
+                                        <div class="accordion accordion-flush" id="task5Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t5f1" data-click-id="file-int-schema"><code>intermediate_schema.yml</code></button></h2><div id="t5f1" class="accordion-collapse collapse" data-bs-parent="#task5Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># models/intermediate/intermediate_schema.yml
+version: 2
+models:
+  - name: int_customer_order_payments
+    description: "Combines data..."
+    columns: [...]</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t5f2" data-click-id="file-int-sql"><code>int_customer_order_payments.sql</code></button></h2><div id="t5f2" class="accordion-collapse collapse" data-bs-parent="#task5Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/intermediate/int_customer_order_payments.sql
+WITH orders AS (...), customers AS (...), payments AS (...), order_payments_agg AS (...)
+SELECT ... /* joins and aggregates */ ...
+FROM orders o LEFT JOIN customers c ON ... LEFT JOIN order_payments_agg opa ON ...</code></pre></div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task6" aria-expanded="false" aria-controls="task6" data-click-id="task6-marts">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 6</span>Build Marts Layer
+                                    </button>
+                                </h2>
+                                <div id="task6" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create <code>models/marts/</code> and files:</p>
+                                        <div class="accordion accordion-flush" id="task6Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t6f1" data-click-id="file-mart-schema"><code>marts_schema.yml</code></button></h2><div id="t6f1" class="accordion-collapse collapse" data-bs-parent="#task6Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># models/marts/marts_schema.yml
+version: 2
+models:
+  - name: dim_customers { description: "...", columns: [...] } # Includes advanced tests
+  - name: fact_orders { description: "...", columns: [...] } # Includes advanced tests</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t6f2" data-click-id="file-mart-cust"><code>dim_customers.sql</code></button></h2><div id="t6f2" class="accordion-collapse collapse" data-bs-parent="#task6Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/marts/dim_customers.sql
+SELECT {{ dbt_utils.surrogate_key(['customer_id']) }} AS customer_sk, ... FROM {{ ref('stg_customers') }} ...</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t6f3" data-click-id="file-mart-ord"><code>fact_orders.sql</code></button></h2><div id="t6f3" class="accordion-collapse collapse" data-bs-parent="#task6Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-sql">-- models/marts/fact_orders.sql
+WITH final_orders AS (...), payments_count AS (...)
+SELECT ..., {{ get_current_timestamp() }} AS loaded_at 
+FROM final_orders fo LEFT JOIN payments_count pc ON ...</code></pre></div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion-item">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#task7" aria-expanded="false" aria-controls="task7" data-click-id="task7-expmet">
+                                        <span class="badge bg-secondary rounded-pill me-2">Task 7</span>Define Exposures & Metrics
+                                    </button>
+                                </h2>
+                                <div id="task7" class="accordion-collapse collapse" data-bs-parent="#buildTasksAccordion">
+                                    <div class="accordion-body">
+                                        <p>Create in <code>models/</code>:</p>
+                                        <div class="accordion accordion-flush" id="task7Files">
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t7f1" data-click-id="file-exp"><code>exposures.yml</code></button></h2><div id="t7f1" class="accordion-collapse collapse" data-bs-parent="#task7Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># models/exposures.yml
+version: 2
+exposures:
+  - name: executive_dashboard { type: dashboard, owner: ..., depends_on: [...], ... }
+  - name: ml_model_customer_churn { type: ml, owner: ..., depends_on: [...], ... }</code></pre></div></div></div></div>
+                                            <div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#t7f2" data-click-id="file-met"><code>metrics.yml</code></button></h2><div id="t7f2" class="accordion-collapse collapse" data-bs-parent="#task7Files"><div class="accordion-body"><div class="code-block"><pre><code class="language-yaml"># models/metrics.yml
+version: 2
+metrics:
+  - name: total_revenue { description: "...", model: ref('fact_orders'), ... }
+  - name: average_order_value { ... }
+  - name: active_customers { ... }</code></pre></div></div></div></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div> </div> <div class="tab-pane fade" id="tab-deploy-pane" role="tabpanel" aria-labelledby="tab-deploy" tabindex="0">
+                    <h3 class="mb-3">Deployment & Execution</h3>
+                    <p>Run core dbt commands and understand deployment concepts through scenarios.</p>
+                     
+                    <div class="accordion" id="deployAccordion">
+                        <div class="accordion-item">
+                             <h2 class="accordion-header">
+                                <button class="accordion-button track-click" type="button" data-bs-toggle="collapse" data-bs-target="#deploy-1" aria-expanded="true" aria-controls="deploy-1" data-click-id="exec-commands">
+                                    <i class="bi bi-play-btn me-2"></i><span class="text-highlight">Core Execution Commands</span>
+                                </button>
+                            </h2>
+                            <div id="deploy-1" class="accordion-collapse collapse show" data-bs-parent="#deployAccordion">
+                                <div class="accordion-body">
+                                     <p>In your terminal (<code>ecom_analytics</code> dir):</p>
+                                    <div class="code-block"><pre><code class="language-bash"># 1. Install packages
+dbt deps
+
+# 2. Load static data
+dbt seed
+
+# 3. Check source data freshness 
+dbt source freshness
+
+# 4. Build models, run tests, generate docs artifacts
+dbt build
+
+# 5. Serve documentation locally
+dbt docs serve
+</code></pre></div>
+                                     <div class="explanation">Execute these commands sequentially. <code>dbt build</code> is key for production-style runs as it includes running models, tests, and generating documentation artifacts.</div>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="accordion-item">
+                             <h2 class="accordion-header">
+                                <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#deploy-s1" aria-expanded="false" aria-controls="deploy-s1" data-click-id="exec-scenario1">
+                                    <i class="bi bi-rocket-takeoff me-2"></i><span class="text-highlight">Scenario 1: Initial Production Deployment</span>
+                                </button>
+                            </h2>
+                            <div id="deploy-s1" class="accordion-collapse collapse" data-bs-parent="#deployAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Goal:</strong> Deploy the entire project for the first time.</p>
+                                    <p><strong>Process:</strong> Set up a <span class="text-highlight">Deployment Job</span> in dbt Cloud (or other orchestrator) to run on a schedule (e.g., daily). The core command should be <code>dbt build</code>. Consider adding <code>dbt source freshness</code> as a first step.</p>
+                                    <p><strong>Example Job Commands:</strong> <code>dbt source freshness</code> -> <code>dbt seed</code> -> <code>dbt build</code></p>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="accordion-item">
+                             <h2 class="accordion-header">
+                                <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#deploy-s2" aria-expanded="false" aria-controls="deploy-s2" data-click-id="exec-scenario2">
+                                     <i class="bi bi-bug-fill me-2"></i><span class="text-highlight">Scenario 2: Handling a Model Failure</span>
+                                </button>
+                            </h2>
+                            <div id="deploy-s2" class="accordion-collapse collapse" data-bs-parent="#deployAccordion">
+                                <div class="accordion-body">
+                                     <p><strong>Problem:</strong> Daily job fails with a SQL error in <code>fact_orders.sql</code>.</p>
+                                     <p><strong>Recovery:</strong> Fix the SQL -> Test locally (<code>dbt build --select fact_orders</code>) -> Merge fix -> Re-run the full job OR trigger a targeted run (e.g., <code>dbt build --select state:failed+ --defer ...</code>).</p>
+                                </div>
+                            </div>
+                        </div>
+                         
+                         <div class="accordion-item">
+                             <h2 class="accordion-header">
+                                <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#deploy-s3" aria-expanded="false" aria-controls="deploy-s3" data-click-id="exec-scenario3">
+                                     <i class="bi bi-clipboard-x me-2"></i><span class="text-highlight">Scenario 3: Handling a Test Failure</span>
+                                </button>
+                            </h2>
+                            <div id="deploy-s3" class="accordion-collapse collapse" data-bs-parent="#deployAccordion">
+                                <div class="accordion-body">
+                                      <p><strong>Problem:</strong> Job fails; <code>unique</code> test on <code>dim_customers.customer_sk</code> failed.</p>
+                                     <p><strong>Recovery:</strong> Investigate root cause (duplicate source data? bad join?) -> Fix source data or model logic -> Test locally (<code>dbt test --select dim_customers</code>) -> Merge fix -> Re-run job (potentially using <code>state:failed+</code> selector).</p>
+                                </div>
+                            </div>
+                        </div>
+
+                         <div class="accordion-item">
+                             <h2 class="accordion-header">
+                                <button class="accordion-button collapsed track-click" type="button" data-bs-toggle="collapse" data-bs-target="#deploy-s4" aria-expanded="false" aria-controls="deploy-s4" data-click-id="exec-scenario4">
+                                    <i class="bi bi-git me-2"></i><span class="text-highlight">Scenario 4: CI/CD Workflow (Pull Request)</span>
+                                </button>
+                            </h2>
+                            <div id="deploy-s4" class="accordion-collapse collapse" data-bs-parent="#deployAccordion">
+                                <div class="accordion-body">
+                                    <p><strong>Goal:</strong> Safely test changes before merging.</p>
+                                     <p><strong>Process:</strong> Open PR -> Automated <span class="text-highlight">CI Job</span> triggers -> Job runs using <span class="text-highlight">"Slim CI"</span> (<code>dbt build --select state:modified+ --defer --state prod_artifacts</code>) -> If passes, merge PR -> Changes deployed by next scheduled <span class="text-highlight">Deployment Job</span>.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div> <div class="tab-pane fade" id="tab-docs-pane" role="tabpanel" aria-labelledby="tab-docs" tabindex="0">
+                    <h3 class="mb-3">Documentation Exploration Checklist</h3>
+                    <p>After running <code>dbt docs serve</code>, open the documentation website and use this checklist to explore:</p>
+
+                     <div class="checklist">
+                        <div class="form-check">
+                            <input class="form-check-input track-click" type="checkbox" value="" id="check1" data-click-id="check1">
+                            <label class="form-check-label" for="check1"><span class="text-highlight">Project Overview:</span> Check model/test/source counts.</label>
+                        </div>
+                        <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check2" data-click-id="check2">
+                            <label class="form-check-label" for="check2"><span class="text-highlight">DAG (Lineage Graph):</span>
+                                <ul>
+                                    <li>Trace lineage from <code>raw_ecommerce_data</code> sources to <code>fact_orders</code>/<code>dim_customers</code> and then to exposures like <code>executive_dashboard</code>.</li>
+                                    <li>Verify custom node colors for marts models.</li>
+                                    <li>Click nodes (e.g., <code>stg_orders</code>) to navigate.</li>
+                                </ul>
+                            </label>
+                        </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check3" data-click-id="check3">
+                            <label class="form-check-label" for="check3"><span class="text-highlight">Model Page</span> (e.g., <code>fact_orders</code>):
+                                <ul>
+                                    <li>Verify description from <code>marts_schema.yml</code>.</li>
+                                    <li>Check column descriptions and tests (<code>is_positive_number</code>, <code>relationships</code>, etc.).</li>
+                                    <li>Inspect "Compiled Code".</li>
+                                    <li>Confirm "Depends On" and "Referenced By".</li>
+                                </ul>
+                            </label>
+                        </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check4" data-click-id="check4">
+                            <label class="form-check-label" for="check4"><span class="text-highlight">Source Page</span> (e.g., <code>raw_customers</code>):
+                                <ul>
+                                    <li>Check descriptions.</li>
+                                    <li>View columns and source-level tests (<code>unique</code>, <code>not_null</code>).</li>
+                                    <li>Find the "Freshness" section (should show PASS initially).</li>
+                                </ul>
+                            </label>
+                        </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check5" data-click-id="check5">
+                            <label class="form-check-label" for="check5"><span class="text-highlight">Exposure Page</span> (e.g., <code>executive_dashboard</code>):
+                                <ul>
+                                    <li>Verify type, owner, URL, description.</li>
+                                    <li>Check the "Depends On" list/graph.</li>
+                                </ul>
+                            </label>
+                         </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check6" data-click-id="check6">
+                            <label class="form-check-label" for="check6"><span class="text-highlight">Metric Page</span> (e.g., <code>total_revenue</code>):
+                                <ul>
+                                    <li>Review definition, calculation, model, dimensions.</li>
+                                </ul>
+                            </label>
+                        </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check7" data-click-id="check7">
+                            <label class="form-check-label" for="check7"><span class="text-highlight">Macro Page</span> (e.g., <code>is_positive_number</code>):
+                                <ul>
+                                    <li>Check description and arguments from <code>macros/schema.yml</code>.</li>
+                                    <li>View macro code.</li>
+                                </ul>
+                            </label>
+                        </div>
+                         <div class="form-check">
+                             <input class="form-check-input track-click" type="checkbox" value="" id="check8" data-click-id="check8">
+                             <label class="form-check-label" for="check8"><span class="text-highlight">Search:</span> Test searching for "customer", "sales", "pii".</label>
+                        </div>
+                    </div>
+                     <div class="alert alert-info mt-4">Confirming your YAML configurations render correctly in Docs is key!</div>
+                </div> <div class="tab-pane fade" id="tab-quiz-pane" role="tabpanel" aria-labelledby="tab-quiz" tabindex="0">
+                     <h3 class="mb-3">Quiz & Certificate</h3>
+                     <p>Test your understanding of the concepts covered in this comprehensive lab.</p>
+
+                     <form id="userInfoForm" class="mb-4 p-4 border rounded bg-light needs-validation" novalidate>
+                         <h5>Enter Your Details to Start</h5>
+                         <div class="mb-3">
+                             <label for="userName" class="form-label">Name:</label>
+                             <input type="text" class="form-control" id="userName" required>
+                              <div class="invalid-feedback">Please enter your name.</div>
+                         </div>
+                         <div class="mb-3">
+                             <label for="userEmail" class="form-label">Email:</label>
+                             <input type="email" class="form-control" id="userEmail" required>
+                              <div class="invalid-feedback">Please enter a valid email address.</div>
+                         </div>
+                         <button type="button" id="startQuizBtn" class="btn btn-primary track-click" data-click-id="start-quiz">Start Quiz</button>
+                     </form>
+
+                     <form id="quizForm" style="display: none;" class="needs-validation" novalidate>
+                         <h4 class="mb-3">Quiz Questions</h4>
+                         
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>1. Which file defines the connection details (account, user, password) for local dbt Core development?</strong></p>
+                             <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1a" value="a" required><label class="form-check-label" for="q1a"> a) <code>dbt_project.yml</code></label></div>
+                             <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1b" value="b" required><label class="form-check-label" for="q1b"> b) <code>packages.yml</code></label></div>
+                             <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1c" value="c" required><label class="form-check-label" for="q1c"> c) <code>profiles.yml</code></label></div>
+                             <div class="form-check"><input class="form-check-input" type="radio" name="q1" id="q1d" value="d" required><label class="form-check-label" for="q1d"> d) <code>sources.yml</code></label></div>
+                             <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>2. In this lab, what materialization type is configured for the `intermediate` models in <code>dbt_project.yml</code>?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q2" id="q2a" value="a" required><label class="form-check-label" for="q2a"> a) table</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q2" id="q2b" value="b" required><label class="form-check-label" for="q2b"> b) view</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q2" id="q2c" value="c" required><label class="form-check-label" for="q2c"> c) ephemeral</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q2" id="q2d" value="d" required><label class="form-check-label" for="q2d"> d) incremental</label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>3. Which command installs the <code>dbt_utils</code> and <code>dbt_expectations</code> packages?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3a" value="a" required><label class="form-check-label" for="q3a"> a) <code>dbt run</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3b" value="b" required><label class="form-check-label" for="q3b"> b) <code>dbt build</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3c" value="c" required><label class="form-check-label" for="q3c"> c) <code>dbt deps</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q3" id="q3d" value="d" required><label class="form-check-label" for="q3d"> d) <code>dbt seed</code></label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+                         
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>4. How is the `stg_customers` model referenced from the `int_customer_order_payments` model?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q4" id="q4a" value="a" required><label class="form-check-label" for="q4a"> a) <code>{{ ref('stg_customers') }}</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q4" id="q4b" value="b" required><label class="form-check-label" for="q4b"> b) <code>{{ source('staging', 'stg_customers') }}</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q4" id="q4c" value="c" required><label class="form-check-label" for="q4c"> c) <code>{{ var('stg_customers') }}</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q4" id="q4d" value="d" required><label class="form-check-label" for="q4d"> d) <code>FROM stg_customers</code></label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>5. The `freshness` block in <code>sources.yml</code> is used to configure:</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q5" id="q5a" value="a" required><label class="form-check-label" for="q5a"> a) Data type validation for source columns.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q5" id="q5b" value="b" required><label class="form-check-label" for="q5b"> b) How often models depending on the source should run.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q5" id="q5c" value="c" required><label class="form-check-label" for="q5c"> c) Warnings and errors based on the maximum age of source data.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q5" id="q5d" value="d" required><label class="form-check-label" for="q5d"> d) The materialization strategy for staging models.</label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>6. Which type of model is typically materialized as `ephemeral` in this project structure?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q6" id="q6a" value="a" required><label class="form-check-label" for="q6a"> a) Marts models (e.g., `fact_orders`)</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q6" id="q6b" value="b" required><label class="form-check-label" for="q6b"> b) Staging and Intermediate models</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q6" id="q6c" value="c" required><label class="form-check-label" for="q6c"> c) Source tables</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q6" id="q6d" value="d" required><label class="form-check-label" for="q6d"> d) Seed tables</label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+                         
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>7. The `dbt_utils.surrogate_key` macro is used in which model in this lab?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q7" id="q7a" value="a" required><label class="form-check-label" for="q7a"> a) <code>stg_customers</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q7" id="q7b" value="b" required><label class="form-check-label" for="q7b"> b) <code>int_customer_order_payments</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q7" id="q7c" value="c" required><label class="form-check-label" for="q7c"> c) <code>dim_customers</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q7" id="q7d" value="d" required><label class="form-check-label" for="q7d"> d) <code>fact_orders</code></label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>8. What is the primary purpose of the `dbt build` command in a production deployment job?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q8" id="q8a" value="a" required><label class="form-check-label" for="q8a"> a) To only generate documentation artifacts.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q8" id="q8b" value="b" required><label class="form-check-label" for="q8b"> b) To only run dbt tests defined in the project.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q8" id="q8c" value="c" required><label class="form-check-label" for="q8c"> c) To run models, run tests, run snapshots, and generate docs artifacts atomically.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q8" id="q8d" value="d" required><label class="form-check-label" for="q8d"> d) To check source data freshness.</label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+                         
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>9. In the "Slim CI" scenario, the <code>state:modified+</code> selector builds:</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q9" id="q9a" value="a" required><label class="form-check-label" for="q9a"> a) Only the models that were changed in the PR.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q9" id="q9b" value="b" required><label class="form-check-label" for="q9b"> b) All models upstream of the changed models.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q9" id="q9c" value="c" required><label class="form-check-label" for="q9c"> c) The models changed in the PR AND all models downstream of them.</label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q9" id="q9d" value="d" required><label class="form-check-label" for="q9d"> d) All models in the entire project.</label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <div class="quiz-question mb-4 p-3 border rounded">
+                             <p><strong>10. Which artifact is primarily used by <code>dbt docs serve</code> to display the structure, code, and descriptions of your project?</strong></p>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q10" id="q10a" value="a" required><label class="form-check-label" for="q10a"> a) <code>run_results.json</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q10" id="q10b" value="b" required><label class="form-check-label" for="q10b"> b) <code>catalog.json</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q10" id="q10c" value="c" required><label class="form-check-label" for="q10c"> c) <code>manifest.json</code></label></div>
+                              <div class="form-check"><input class="form-check-input" type="radio" name="q10" id="q10d" value="d" required><label class="form-check-label" for="q10d"> d) <code>sources.json</code></label></div>
+                               <div class="invalid-feedback">Please select an answer.</div>
+                         </div>
+
+                         <button type="submit" class="btn btn-success btn-lg track-click" data-click-id="submit-quiz">Submit Quiz</button>
+                     </form>
+
+                      <div id="resultsArea" style="display: none;" class="mt-4 p-4 border rounded bg-light">
+                         <h4 id="resultMessage">Your Results:</h4>
+                         <p id="scoreDisplay" class="fs-5"></p>
+                         <div id="certificateSection" style="display: none;">
+                            <hr>
+                            <h5><i class="bi bi-award-fill text-success me-2"></i>Certificate of Completion</h5>
+                            <p>Congratulations! You passed the quiz.</p>
+                             <button id="downloadCertBtn" class="btn btn-primary track-click" data-click-id="download-cert"><i class="bi bi-download me-1"></i> Download Certificate (PDF)</button>
+                             <canvas id="certificateCanvas" width="800" height="600" style="display: none; border: 1px solid #ccc; margin-top: 15px;"></canvas> </div>
+                          <div id="failMessage" style="display: none;">
+                             <p>You need a score of 80% or higher to receive a certificate. Please review the lab materials and try again!</p>
+                         </div>
+                     </div>
+
+                 </div> </div> </div> </div> </div> <footer class="site-footer text-center">
+        <div class="container">
+            <p class="mb-1"><strong>Vedatadots</strong> - Trainings Partner for Cloud, Data and AI</p>
+            <p class="mb-0" style="font-size: 0.9em;">Contact: <a href="mailto:info@vedadots.com">info@vedadots.com</a></p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // --- Global Variables & Elements ---
+            const timerDisplay = document.getElementById('countdown-timer');
+            const dateDisplay = document.getElementById('current-date');
+            const progressCircle = document.getElementById('progress-circle');
+            const progressText = document.getElementById('progress-text');
+            const labStartForm = document.getElementById('labStartForm');
+            const startLabBtn = document.getElementById('startLabBtn');
+            const labContentContainer = document.getElementById('labContentContainer');
+            const userInfoForm = document.getElementById('userInfoForm'); // Quiz user form
+            const startQuizBtn = document.getElementById('startQuizBtn'); // Quiz start button
+            const quizForm = document.getElementById('quizForm');
+            const resultsArea = document.getElementById('resultsArea');
+            const resultMessage = document.getElementById('resultMessage');
+            const scoreDisplay = document.getElementById('scoreDisplay');
+            const certificateSection = document.getElementById('certificateSection');
+            const failMessage = document.getElementById('failMessage');
+            const downloadCertBtn = document.getElementById('downloadCertBtn');
+            const certificateCanvas = document.getElementById('certificateCanvas');
+            
+            let timerInterval; 
+            let periodicUpdateInterval;
+            let uniqueClicks = new Set(); 
+            let totalMeaningfulClicks = 0; 
+            let startTime = null; 
+            let timeTaken = 0; 
+            let currentSessionId = null; // To store the unique session ID
+            const correctAnswers = { q1: 'c', q2: 'c', q3: 'c', q4: 'a', q5: 'c', q6: 'b', q7: 'c', q8: 'c', q9: 'c', q10: 'c' }; 
+            const totalQuestions = Object.keys(correctAnswers).length;
+            const labDurationMinutes = 120; 
+
+            // --- Supabase Placeholder Config ---
+            // REPLACE WITH YOUR ACTUAL SUPABASE DETAILS
+            const SUPABASE_URL = 'https://elroejsompodnrhactnq.supabase.co'; 
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVscm9lanNvbXBvZG5yaGFjdG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA4NjY2MTMsImV4cCI6MjA3NjQ0MjYxM30.tNcTk6bX-Cq2XGl_AOQbeITjUlSUS-K7gnVuqItdT1A';
+            const SUPABASE_TABLE_NAME = 'lab_sessions'; 
+
+            // --- Initial Page Load ---
+            setCurrentDate();
+            // Lab content is hidden until user provides info
+
+            // --- Event Listener for Starting the Lab ---
+            startLabBtn.addEventListener('click', function(event) {
+                if (!labStartForm.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    labStartForm.classList.add('was-validated');
+                    alert('Please enter your name and email to start the lab.');
+                } else {
+                    labStartForm.style.display = 'none'; // Hide the start form
+                    labContentContainer.style.display = 'block'; // Show the lab content
+                    labStartForm.classList.remove('was-validated'); 
+                    
+                    // Generate Session ID & Start Timers/Tracking
+                    currentSessionId = generateUUID(); // Generate a unique ID for this session
+                    startTime = Date.now(); 
+                    startTimer(labDurationMinutes); 
+                    initializeProgressTracking(); // Initialize AFTER content is visible
+                    logInitialSession(currentSessionId); // Log session start to backend
+                    startPeriodicUpdates(currentSessionId); // Start sending updates
+                    
+                     // Pre-fill quiz form if details are available (optional)
+                    const labUserName = document.getElementById('labUserName').value;
+                    const labUserEmail = document.getElementById('labUserEmail').value;
+                    document.getElementById('userName').value = labUserName;
+                    document.getElementById('userEmail').value = labUserEmail;
+                     userInfoForm.querySelector('h5').textContent = "Confirm Your Details for Certificate"; // Update quiz form title
+
+                     // Update backend with name/email associated with this session
+                     updateSessionNameEmail(currentSessionId, labUserName, labUserEmail);
+                }
+            });
+
+
+            // --- Countdown Timer ---
+            function startTimer(durationMinutes) {
+                let timerSeconds = durationMinutes * 60;
+                function updateTimerDisplay() {
+                    const minutes = Math.floor(timerSeconds / 60);
+                    const seconds = timerSeconds % 60;
+                    timerDisplay.textContent = `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    if (timerSeconds > 0) { timerSeconds--; } 
+                    else { timerDisplay.textContent = "00:00"; clearInterval(timerInterval); }
+                }
+                if (timerInterval) clearInterval(timerInterval); // Clear any existing timer
+                updateTimerDisplay(); 
+                timerInterval = setInterval(updateTimerDisplay, 1000);
+            }
+
+             // --- Current Date ---
+             function setCurrentDate() {
+                 const today = new Date();
+                 dateDisplay.textContent = today.toLocaleDateString(); 
+             }
+
+            // --- Click-Based Progress Estimation ---
+            function initializeProgressTracking() {
+                 const clickableItems = document.querySelectorAll('.track-click'); 
+                 totalMeaningfulClicks = clickableItems.length; 
+                 console.log("Total trackable clicks:", totalMeaningfulClicks); // Debugging
+                 
+                 clickableItems.forEach(item => {
+                    let clickId = item.dataset.clickId || item.id;
+                    if (!clickId) {
+                        clickId = `track-${crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substr(2, 9)}`;
+                        item.dataset.clickId = clickId;
+                    }
+
+                    item.addEventListener('click', () => {
+                        const currentId = item.dataset.clickId;
+                        let shouldUpdate = false;
+
+                        // Only track clicks if the lab has started
+                        if (!startTime) return; 
+
+                        if (item.type === 'checkbox') {
+                            if (item.checked && !uniqueClicks.has(currentId)) {
+                                uniqueClicks.add(currentId);
+                                shouldUpdate = true;
+                            } 
+                        } else if (!uniqueClicks.has(currentId)) {
+                            // Don't count quiz submit button towards initial progress
+                            if (currentId !== 'submit-quiz' && currentId !== 'start-quiz' && currentId !== 'download-cert') { 
+                                uniqueClicks.add(currentId);
+                                shouldUpdate = true;
+                            }
+                        }
+                        
+                        // Count accordion opening 
+                        if (item.classList.contains('accordion-button') && !item.classList.contains('collapsed')) {
+                             const openId = currentId + '-opened';
+                             if (!uniqueClicks.has(openId)) {
+                                 uniqueClicks.add(openId);
+                                 shouldUpdate = true; 
+                             }
+                        }
+                         if (shouldUpdate) updateProgressDisplay();
+                    });
+                });
+                updateProgressDisplay(); 
+            }
+             
+            function updateProgressDisplay() {
+                const currentProgress = totalMeaningfulClicks > 0 ? Math.min(100, Math.round((uniqueClicks.size / totalMeaningfulClicks) * 100)) : 0;
+                progressCircle.style.setProperty('--progress-percent', currentProgress); 
+                progressText.textContent = `${currentProgress}%`;
+                progressCircle.setAttribute('aria-valuenow', currentProgress);
+                return currentProgress; // Return value for sending updates
+            }
+
+             // --- Unique ID Generation ---
+             function generateUUID() { 
+                return crypto.randomUUID ? crypto.randomUUID() : ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+                );
+            }
+
+
+            // --- Backend Communication (PLACEHOLDERS - REPLACE WITH ACTUAL FETCH CALLS) ---
+
+            async function logInitialSession(sessionId) {
+                 if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { console.warn("Supabase URL/Key not set."); return; }
+                 console.log(`Logging initial session: ${sessionId}`);
+                 const payload = {
+                     session_id: sessionId,
+                     created_at: new Date().toISOString()
+                     // Backend (e.g., Edge Function) should add IP address here
+                 };
+                 try {
+                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE_NAME}`, {
+                         method: 'POST',
+                         headers: {
+                             'apikey': SUPABASE_ANON_KEY,
+                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                             'Content-Type': 'application/json',
+                             'Prefer': 'return=minimal' 
+                         },
+                         body: JSON.stringify(payload)
+                     });
+                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                     console.log('Initial session logged.');
+                 } catch (error) {
+                     console.error('Error logging initial session:', error);
+                 }
+            }
+            
+            async function updateSessionNameEmail(sessionId, name, email) {
+                 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !sessionId) { console.warn("Supabase URL/Key or Session ID missing."); return; }
+                 console.log(`Updating session ${sessionId} with Name/Email`);
+                 const payload = {
+                     name: name,
+                     email: email,
+                     last_updated_at: new Date().toISOString()
+                 };
+                  try {
+                     // Use PATCH to update specific fields, targeting the row via session_id query param
+                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE_NAME}?session_id=eq.${sessionId}`, {
+                         method: 'PATCH',
+                         headers: {
+                             'apikey': SUPABASE_ANON_KEY,
+                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                             'Content-Type': 'application/json',
+                             'Prefer': 'return=minimal' 
+                         },
+                         body: JSON.stringify(payload)
+                     });
+                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                     console.log('Session updated with name/email.');
+                 } catch (error) {
+                     console.error('Error updating name/email:', error);
+                 }
+            }
+
+            function startPeriodicUpdates(sessionId) {
+                if (periodicUpdateInterval) clearInterval(periodicUpdateInterval); // Clear existing interval if any
+
+                periodicUpdateInterval = setInterval(async () => {
+                    if (!startTime || !sessionId) return; // Don't run if lab hasn't started
+
+                    const currentDurationMs = Date.now() - startTime;
+                    const currentProgressPercentage = updateProgressDisplay(); // Get current progress
+
+                    console.log(`Sending periodic update for ${sessionId}: Duration=${currentDurationMs}, Progress=${currentProgressPercentage}%`);
+                    
+                     if (!SUPABASE_URL || !SUPABASE_ANON_KEY) { console.warn("Supabase URL/Key not set."); return; }
+                     
+                     const payload = {
+                         last_updated_at: new Date().toISOString(),
+                         current_duration_ms: currentDurationMs,
+                         progress_percentage: currentProgressPercentage
+                     };
+
+                     try {
+                         const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE_NAME}?session_id=eq.${sessionId}`, {
+                             method: 'PATCH',
+                             headers: {
+                                 'apikey': SUPABASE_ANON_KEY,
+                                 'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                                 'Content-Type': 'application/json',
+                                 'Prefer': 'return=minimal' 
+                             },
+                             body: JSON.stringify(payload)
+                         });
+                         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                         console.log('Periodic update sent.');
+                     } catch (error) {
+                         console.error('Error sending periodic update:', error);
+                         // Optionally stop interval if updates consistently fail
+                         // clearInterval(periodicUpdateInterval); 
+                     }
+
+                }, 120000); // 120000 ms = 2 minutes
+            }
+
+             async function submitQuizResultsToBackend(sessionId, scorePercentage, durationMs) {
+                if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !sessionId) { console.warn("Supabase URL/Key or Session ID missing."); return; }
+                
+                 console.log(`Submitting quiz results for ${sessionId}: Score=${scorePercentage}, Duration=${durationMs}`);
+                 const payload = {
+                     quiz_submitted: true,
+                     quiz_score: scorePercentage,
+                     current_duration_ms: durationMs, // Final duration
+                     last_updated_at: new Date().toISOString()
+                 };
+
+                 try {
+                     const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TABLE_NAME}?session_id=eq.${sessionId}`, {
+                         method: 'PATCH',
+                         headers: {
+                             'apikey': SUPABASE_ANON_KEY,
+                             'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                             'Content-Type': 'application/json',
+                             'Prefer': 'return=minimal' 
+                         },
+                         body: JSON.stringify(payload)
+                     });
+                     if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                     console.log('Quiz results submitted.');
+                     sessionStorage.setItem('quizSubmitted_' + sessionId, 'true'); // Mark as submitted for this session
+                     quizForm.querySelector('button[type="submit"]').disabled = true; // Disable submit button
+                 } catch (error) {
+                     console.error('Error submitting quiz results:', error);
+                     alert('There was an issue saving your quiz results. Please try again or contact the administrator.');
+                 }
+             }
+
+
+            // --- Quiz Logic ---
+            startQuizBtn.addEventListener('click', function(event) {
+                 if (!userInfoForm.checkValidity()) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    userInfoForm.classList.add('was-validated');
+                    alert('Please enter a valid name and email address.');
+                } else {
+                    userInfoForm.style.display = 'none';
+                    quizForm.style.display = 'block';
+                    userInfoForm.classList.remove('was-validated'); 
+                    // Check if already submitted in this session
+                    if (sessionStorage.getItem('quizSubmitted_' + currentSessionId)) {
+                        quizForm.querySelector('button[type="submit"]').disabled = true;
+                        alert('You have already submitted the quiz for this session.');
+                    }
+                }
+            });
+
+            quizForm.addEventListener('submit', function(event) {
+                event.preventDefault(); 
+                 if (!quizForm.checkValidity()) {
+                    // ... (existing validation code) ...
+                    return; 
+                 }
+                
+                quizForm.classList.remove('was-validated'); 
+
+                let score = 0;
+                const formData = new FormData(quizForm);
+                
+                for (let i = 1; i <= totalQuestions; i++) {
+                    const questionKey = `q${i}`;
+                    const selectedAnswer = formData.get(questionKey);
+                    if (selectedAnswer === correctAnswers[questionKey]) { score++; }
+                }
+
+                const percentage = Math.round((score / totalQuestions) * 100);
+                timeTaken = Date.now() - startTime; 
+                clearInterval(timerInterval); // Stop countdown
+                clearInterval(periodicUpdateInterval); // Stop periodic updates
+
+                // Submit results before displaying
+                submitQuizResultsToBackend(currentSessionId, percentage, timeTaken).then(() => {
+                     displayResults(percentage); // Display after attempting submission
+                 }); 
+            });
+
+            function displayResults(percentage) {
+                quizForm.style.display = 'none';
+                resultsArea.style.display = 'block';
+                scoreDisplay.textContent = `You scored ${percentage}%.`;
+
+                if (percentage >= 80) {
+                    resultMessage.textContent = "Congratulations! You Passed!";
+                    certificateSection.style.display = 'block';
+                    failMessage.style.display = 'none';
+                } else {
+                     resultMessage.textContent = "Keep Learning!";
+                     certificateSection.style.display = 'none';
+                     failMessage.style.display = 'block';
+                }
+            }
+             
+            function formatTime(milliseconds) {
+                if (!milliseconds || milliseconds < 0) return "00:00";
+                const totalSeconds = Math.floor(milliseconds / 1000);
+                const minutes = Math.floor(totalSeconds / 60);
+                const seconds = totalSeconds % 60;
+                return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+            }
+
+            // --- Certificate Generation (using jsPDF) ---
+            downloadCertBtn.addEventListener('click', function() {
+                const userName = document.getElementById('labUserName').value; // Get name from initial form
+                const userEmail = document.getElementById('labUserEmail').value; // Get email from initial form
+                const scoreText = scoreDisplay.textContent; 
+                const scoreMatch = scoreText.match(/(\d+)%/); 
+                const scorePercentage = scoreMatch ? parseInt(scoreMatch[1]) : 0; 
+                const labProgressText = progressText.textContent; 
+                
+                generateCertificatePDF(userName, userEmail, scorePercentage, timeTaken, labProgressText);
+            });
+
+             function generateCertificatePDF(name, email, percentage, durationMs, labCompletion) {
+                const { jsPDF } = window.jspdf; 
+                const canvas = document.getElementById('certificateCanvas');
+                const ctx = canvas.getContext('2d');
+                const canvasWidth = canvas.width; 
+                const canvasHeight = canvas.height; 
+                const today = new Date().toLocaleDateString();
+                const timeTakenFormatted = formatTime(durationMs);
+
+                const primaryColor = 'rgb(111, 66, 193)'; const darkPurple = '#301934'; const grayColor = '#6c757d'; const lightBg = '#ffffff'; 
+                const headerFooterBg = '#301934'; const headerFooterText = '#ffffff'; const padding = 40; 
+
+                // --- Drawing on Canvas (same as before) ---
+                ctx.fillStyle = lightBg; ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+                ctx.fillStyle = headerFooterBg; ctx.fillRect(0, 0, canvasWidth, 50); ctx.fillStyle = headerFooterText; ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'left'; ctx.fillText('🎓 Learn with Vikash', padding, 35); 
+                ctx.fillStyle = headerFooterBg; ctx.fillRect(0, canvasHeight - 50, canvasWidth, 50); ctx.fillStyle = headerFooterText; ctx.font = '14px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Vedatadots - Trainings Partner | info@vedadots.com', canvasWidth / 2, canvasHeight - 20); 
+                ctx.strokeStyle = primaryColor; ctx.lineWidth = 15; ctx.strokeRect(7.5, 7.5, canvasWidth - 15, canvasHeight - 15);
+                ctx.strokeStyle = 'rgba(111, 66, 193, 0.4)'; ctx.lineWidth = 1; ctx.strokeRect(padding, padding, canvasWidth - 2 * padding, canvasHeight - 2 * padding); 
+                ctx.fillStyle = primaryColor; ctx.font = 'bold 44px "Segoe UI", Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText('Certificate of Completion', canvasWidth / 2, padding + 70); 
+                ctx.fillStyle = grayColor; ctx.font = '20px "Segoe UI", Arial, sans-serif'; ctx.fillText('This certifies that', canvasWidth / 2, padding + 120); 
+                ctx.fillStyle = darkPurple; ctx.font = 'bold 38px "Segoe UI", Arial, sans-serif'; ctx.fillText(name, canvasWidth / 2, padding + 180); 
+                ctx.fillStyle = '#495057'; ctx.font = '20px "Segoe UI", Arial, sans-serif'; ctx.fillText('has successfully completed the lab', canvasWidth / 2, padding + 230); ctx.font = 'bold 20px "Segoe UI", Arial, sans-serif'; ctx.fillText('Comprehensive Sample dbt Project', canvasWidth / 2, padding + 260); 
+                const detailsY = padding + 320; const colWidth = (canvasWidth - 2 * padding) / 3; const col1X = padding + colWidth * 0.5; const col2X = padding + colWidth * 1.5; const col3X = padding + colWidth * 2.5;
+                ctx.font = 'bold 18px "Segoe UI", Arial, sans-serif'; ctx.fillStyle = '#198754'; ctx.fillText(`✅ Quiz Score: ${percentage}%`, col1X, detailsY);
+                ctx.fillStyle = darkPurple; ctx.fillText(`⏱️ Time: ${timeTakenFormatted}`, col2X, detailsY); ctx.fillText(`📊 Progress: ${labCompletion}`, col3X, detailsY); 
+                ctx.fillStyle = grayColor; ctx.font = '16px "Segoe UI", Arial, sans-serif'; ctx.fillText(`Date: ${today}`, canvasWidth / 2, detailsY + 40); 
+                const signatureY = canvasHeight - padding - 80; ctx.fillStyle = darkPurple; ctx.font = 'italic bold 26px "Brush Script MT", cursive'; ctx.textAlign = 'center'; ctx.fillText('Vikash', canvasWidth / 2, signatureY); 
+                ctx.fillStyle = grayColor; ctx.font = '16px "Segoe UI", Arial, sans-serif'; ctx.fillText('Trainer - Vikash', canvasWidth / 2, signatureY + 25);
+                ctx.strokeStyle = grayColor; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(canvasWidth / 2 - 100, signatureY - 15); ctx.lineTo(canvasWidth / 2 + 100, signatureY - 15); ctx.stroke();
+                // --- Generate PDF ---
+                const imgData = canvas.toDataURL('image/png'); 
+                const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [canvasWidth, canvasHeight] });
+                pdf.addImage(imgData, 'PNG', 0, 0, canvasWidth, canvasHeight);
+                pdf.save(`dbt_lab_certificate_${name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`); 
+            }
+
+            // --- Initialize Page ---
+            setCurrentDate(); // Set date immediately
+            // Timer, Progress, and Session Logging start only after user enters info and clicks "Start Lab"
+        });
+    </script>
+
+</body>
+</html>
